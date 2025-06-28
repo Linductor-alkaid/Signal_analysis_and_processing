@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离散时间傅里叶变换(DTFT)</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .relationship {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .property-box {
+            background: #f3e5f5;
+            border: 1px solid #9c27b0;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .spectrum-display {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .spectrum-part {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 第三章：离散时间傅里叶变换(DTFT)</h1>
+        
+        <h2>3.1 DTFT的定义</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本定义</h3>
+            <p>序列 x[n] 的<strong>离散时间傅里叶变换(DTFT)</strong>定义为：</p>
+            <div class="formula">
+                X(e<sup>jω</sup>) = ∑<sub>n=-∞</sub><sup>∞</sup> x[n]e<sup>-jωn</sup>
+            </div>
+            <p>相应的<strong>逆变换(IDTFT)</strong>为：</p>
+            <div class="formula">
+                x[n] = (1/2π) ∫<sub>-π</sub><sup>π</sup> X(e<sup>jω</sup>)e<sup>jωn</sup>dω
+            </div>
+            <p>其中：</p>
+            <ul>
+                <li><strong>ω</strong>：数字角频率（弧度），-π ≤ ω ≤ π</li>
+                <li><strong>X(e<sup>jω</sup>)</strong>：x[n]的频谱函数</li>
+                <li><strong>e<sup>jω</sup></strong>：单位圆上的复指数</li>
+            </ul>
+        </div>
+        
+        <div class="relationship">
+            <h3>🔗 与z变换的关系</h3>
+            <p><strong>DTFT是z变换在单位圆上的特例：</strong></p>
+            <div class="formula">
+                X(e<sup>jω</sup>) = X(z)|<sub>z=e<sup>jω</sup></sub>
+            </div>
+            <p>当z变换的ROC包含单位圆时，DTFT存在。</p>
+        </div>
+        
+        <h2>3.2 物理意义</h2>
+        
+        <div class="knowledge-point">
+            <h3>频域分析的本质</h3>
+            <ol>
+                <li><strong>频谱分解</strong>：将离散信号分解为不同频率的复指数分量</li>
+                <li><strong>频率响应</strong>：描述系统对不同频率分量的响应特性</li>
+                <li><strong>能量分布</strong>：|X(e<sup>jω</sup>)|²表示信号在各频率上的能量分布</li>
+                <li><strong>相位信息</strong>：∠X(e<sup>jω</sup>)表示各频率分量的相位关系</li>
+            </ol>
+        </div>
+        
+        <div class="example">
+            <h4>几何解释</h4>
+            <p>DTFT可以理解为：</p>
+            <ul>
+                <li>将序列投影到单位圆上不同频率的复指数基函数</li>
+                <li>每个频率ω对应单位圆上一个点 e<sup>jω</sup></li>
+                <li>X(e<sup>jω</sup>)给出了该频率分量的复振幅</li>
+            </ul>
+        </div>
+        
+        <h2>3.3 DTFT的重要特点</h2>
+        
+        <div class="property-box">
+            <h3>1. 周期性</h3>
+            <div class="formula">
+                X(e<sup>j(ω+2π)</sup>) = X(e<sup>jω</sup>)
+            </div>
+            <p><strong>原因：</strong>e<sup>j(ω+2π)n</sup> = e<sup>jωn</sup>e<sup>j2πn</sup> = e<sup>jωn</sup></p>
+            <p><span class="highlight">因此，只需要分析一个周期内的频谱即可</span></p>
+        </div>
+        
+        <div class="property-box">
+            <h3>2. 实序列的共轭对称性</h3>
+            <p>当 x[n] 为实序列时：</p>
+            <div class="formula">
+                X(e<sup>j(-ω)</sup>) = X*(e<sup>jω</sup>)
+            </div>
+            <p>这意味着：</p>
+            <ul>
+                <li><strong>幅度谱</strong>：|X(e<sup>jω</sup>)|为偶函数</li>
+                <li><strong>相位谱</strong>：∠X(e<sup>jω</sup>)为奇函数</li>
+            </ul>
+        </div>
+        
+        <div class="property-box">
+            <h3>3. 连续性</h3>
+            <p>DTFT是连续函数，不同于离散傅里叶变换(DFT)的离散特性</p>
+        </div>
+        
+        <div class="plot-container">
+            <h3>DTFT特性可视化</h3>
+            <div class="spectrum-display">
+                <div class="spectrum-part">
+                    <canvas id="magnitudeSpectrum" width="350" height="250"></canvas>
+                    <p>幅度谱 |X(e<sup>jω</sup>)|</p>
+                </div>
+                <div class="spectrum-part">
+                    <canvas id="phaseSpectrum" width="350" height="250"></canvas>
+                    <p>相位谱 ∠X(e<sup>jω</sup>)</p>
+                </div>
+            </div>
+            <div class="controls">
+                <label>选择序列：</label>
+                <select id="spectrumSequence">
+                    <option value="rectangular">矩形序列</option>
+                    <option value="exponential">指数序列</option>
+                    <option value="sinc">sinc序列</option>
+                    <option value="triangular">三角序列</option>
+                </select>
+                <label>序列长度N：</label>
+                <input type="number" id="seqLength" value="8" min="4" max="16">
+                <button onclick="plotSpectrum()">绘制频谱</button>
+            </div>
+        </div>
+        
+        <h2>3.4 存在条件</h2>
+        
+        <div class="knowledge-point">
+            <h3>绝对可积条件</h3>
+            <p>DTFT存在的<strong>充分条件</strong>是序列绝对可积：</p>
+            <div class="formula">
+                ∑<sub>n=-∞</sub><sup>∞</sup> |x[n]| < ∞
+            </div>
+            <p>这保证了DTFT的存在性和一致收敛性。</p>
+        </div>
+        
+        <div class="important">
+            <h3>⚠️ 特殊情况</h3>
+            <p>某些不满足绝对可积条件的序列，其DTFT可能以<strong>广义函数（冲激函数）</strong>的形式存在：</p>
+            <ul>
+                <li><strong>常数序列</strong>：x[n] = 1</li>
+                <li><strong>正弦序列</strong>：x[n] = cos(ω₀n)</li>
+                <li><strong>阶跃序列</strong>：x[n] = u[n]</li>
+            </ul>
+        </div>
+        
+        <div class="example">
+            <h4>存在性判断实例</h4>
+            <table>
+                <tr>
+                    <th>序列</th>
+                    <th>绝对可积性</th>
+                    <th>DTFT存在性</th>
+                    <th>备注</th>
+                </tr>
+                <tr>
+                    <td>a<sup>n</sup>u[n], |a|<1</td>
+                    <td>满足</td>
+                    <td>存在</td>
+                    <td>收敛指数序列</td>
+                </tr>
+                <tr>
+                    <td>a<sup>n</sup>u[n], |a|≥1</td>
+                    <td>不满足</td>
+                    <td>不存在</td>
+                    <td>发散序列</td>
+                </tr>
+                <tr>
+                    <td>矩形窗序列</td>
+                    <td>满足</td>
+                    <td>存在</td>
+                    <td>有限长序列</td>
+                </tr>
+                <tr>
+                    <td>cos(ω₀n)</td>
+                    <td>不满足</td>
+                    <td>广义存在</td>
+                    <td>包含冲激函数</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2>3.5 常见序列的DTFT</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本DTFT变换对</h3>
+            <table>
+                <tr>
+                    <th>序列 x[n]</th>
+                    <th>DTFT X(e<sup>jω</sup>)</th>
+                    <th>存在条件</th>
+                </tr>
+                <tr>
+                    <td>δ[n]</td>
+                    <td>1</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>δ[n-n₀]</td>
+                    <td>e<sup>-jωn₀</sup></td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>a<sup>n</sup>u[n]</td>
+                    <td>1/(1-ae<sup>-jω</sup>)</td>
+                    <td>|a| < 1</td>
+                </tr>
+                <tr>
+                    <td>矩形窗 R_N[n]</td>
+                    <td>sin(ωN/2)/sin(ω/2) · e<sup>-jω(N-1)/2</sup></td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>1 (常数)</td>
+                    <td>2π∑δ(ω-2πk)</td>
+                    <td>广义</td>
+                </tr>
+                <tr>
+                    <td>cos(ω₀n)</td>
+                    <td>π[δ(ω-ω₀)+δ(ω+ω₀)]</td>
+                    <td>广义</td>
+                </tr>
+                <tr>
+                    <td>sin(ω₀n)</td>
+                    <td>jπ[δ(ω+ω₀)-δ(ω-ω₀)]</td>
+                    <td>广义</td>
+                </tr>
+                <tr>
+                    <td>u[n]</td>
+                    <td>1/(1-e<sup>-jω</sup>) + π∑δ(ω-2πk)</td>
+                    <td>广义</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="plot-container">
+            <h3>常见序列DTFT对比</h3>
+            <canvas id="dtftComparison" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>对比序列1：</label>
+                <select id="seq1Type">
+                    <option value="rect4">矩形窗(N=4)</option>
+                    <option value="rect8">矩形窗(N=8)</option>
+                    <option value="exp0.5">指数序列(a=0.5)</option>
+                    <option value="exp0.8">指数序列(a=0.8)</option>
+                </select>
+                <label>对比序列2：</label>
+                <select id="seq2Type">
+                    <option value="rect8">矩形窗(N=8)</option>
+                    <option value="rect4">矩形窗(N=4)</option>
+                    <option value="exp0.8">指数序列(a=0.8)</option>
+                    <option value="exp0.5">指数序列(a=0.5)</option>
+                </select>
+                <button onclick="plotDTFTComparison()">对比频谱</button>
+            </div>
+        </div>
+        
+        <h2>3.6 DTFT计算方法</h2>
+        
+        <div class="knowledge-point">
+            <h3>计算步骤</h3>
+            <ol>
+                <li><strong>检查存在条件</strong>：验证绝对可积性</li>
+                <li><strong>应用定义</strong>：直接计算级数或查表</li>
+                <li><strong>利用性质</strong>：时移、频移、对称性等</li>
+                <li><strong>几何级数求和</strong>：对于指数类序列</li>
+                <li><strong>分段处理</strong>：有限长序列分段计算</li>
+            </ol>
+        </div>
+        
+        <div class="example">
+            <h4>计算实例：矩形窗序列</h4>
+            <p><strong>问题：</strong>求矩形窗序列的DTFT</p>
+            <p>x[n] = {1, 0 ≤ n ≤ N-1; 0, 其他}</p>
+            <p><strong>解：</strong></p>
+            <div class="formula">
+                X(e<sup>jω</sup>) = ∑<sub>n=0</sub><sup>N-1</sup> e<sup>-jωn</sup> = (1-e<sup>-jωN</sup>)/(1-e<sup>-jω</sup>)
+            </div>
+            <p>化简得到：</p>
+            <div class="formula">
+                X(e<sup>jω</sup>) = e<sup>-jω(N-1)/2</sup> · sin(ωN/2)/sin(ω/2)
+            </div>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：DTFT基本计算</h4>
+            <p>求下列序列的DTFT：</p>
+            <ol>
+                <li>x₁[n] = (0.5)<sup>n</sup>u[n]</li>
+                <li>x₂[n] = (0.5)<sup>|n|</sup></li>
+                <li>x₃[n] = {1, -2≤n≤2; 0, 其他}</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                1. X₁(e^jω) = 1/(1-0.5e^(-jω))<br>
+                2. X₂(e^jω) = (1-0.25)/(1-0.5e^(-jω)) + (1-0.25)/(1-0.5e^(jω)) - 1 = (1.75-cos(ω))/(1.25-cos(ω))<br>
+                3. X₃(e^jω) = 1 + 2cos(ω) + 2cos(2ω)
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：存在性判断</h4>
+            <p>判断下列序列的DTFT存在性：</p>
+            <ol>
+                <li>x₁[n] = n·(0.8)<sup>n</sup>u[n]</li>
+                <li>x₂[n] = (1.2)<sup>n</sup>u[n]</li>
+                <li>x₃[n] = (0.9)<sup>|n|</sup></li>
+                <li>x₄[n] = cos(πn/3)u[n]</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                1. 存在（|0.8| < 1，绝对可积）<br>
+                2. 不存在（|1.2| > 1，不绝对可积）<br>
+                3. 存在（双边指数序列，|0.9| < 1）<br>
+                4. 不存在（周期序列，不绝对可积，但可能广义存在）
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：频谱性质应用</h4>
+            <p>已知 x[n] = (0.5)<sup>n</sup>u[n] 的DTFT为 X(e<sup>jω</sup>) = 1/(1-0.5e<sup>-jω</sup>)</p>
+            <p>求下列序列的DTFT：</p>
+            <ol>
+                <li>y₁[n] = x[n-3]</li>
+                <li>y₂[n] = e<sup>jπn/4</sup>x[n]</li>
+                <li>y₃[n] = x[-n]</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                1. Y₁(e^jω) = e^(-j3ω)/(1-0.5e^(-jω))（时移性质）<br>
+                2. Y₂(e^jω) = 1/(1-0.5e^(-j(ω-π/4)))（频移性质）<br>
+                3. Y₃(e^jω) = 1/(1-0.5e^(jω))（时间反折性质）
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：频谱分析</h4>
+            <p>矩形窗序列 x[n] = {1, 0≤n≤7; 0, 其他} 的幅度谱在哪些频率处为零？</p>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                幅度谱 |X(e^jω)| = |sin(4ω)/sin(ω/2)|<br>
+                零点出现在：ω = 2πk/8, k = ±1, ±2, ±3, ...(除了k=0,±8,±16,...)<br>
+                即：ω = π/4, π/2, 3π/4, π, 5π/4, 3π/2, 7π/4
+            </div>
+        </div>
+        
+        <h2>3.7 学习要点总结</h2>
+        
+        <div class="important">
+            <h3>🎯 核心要点</h3>
+            <ol>
+                <li><strong>定义理解</strong>：DTFT = z变换在单位圆上</li>
+                <li><strong>周期性</strong>：频谱以2π为周期</li>
+                <li><strong>对称性</strong>：实序列的幅度谱偶对称，相位谱奇对称</li>
+                <li><strong>存在条件</strong>：绝对可积是充分条件</li>
+                <li><strong>物理意义</strong>：频率域分析的基础工具</li>
+                <li><strong>应用价值</strong>：系统频率响应分析的基础</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // 绘制频谱函数
+        function plotSpectrum() {
+            const sequenceType = document.getElementById('spectrumSequence').value;
+            const N = parseInt(document.getElementById('seqLength').value);
+            
+            plotMagnitudeSpectrum(sequenceType, N);
+            plotPhaseSpectrum(sequenceType, N);
+        }
+        
+        function plotMagnitudeSpectrum(type, N) {
+            const canvas = document.getElementById('magnitudeSpectrum');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 坐标系设置
+            const centerY = height * 0.8;
+            const scaleX = width / (2 * Math.PI);
+            const scaleY = height * 0.3;
+            
+            // 画坐标轴
+            drawAxes(ctx, width, height, centerY, 'ω', '|X(e^jω)|');
+            
+            // 计算并绘制幅度谱
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let omega = -Math.PI; omega <= Math.PI; omega += 0.02) {
+                const magnitude = calculateMagnitudeSpectrum(type, N, omega);
+                const x = width/2 + omega * scaleX;
+                const y = centerY - magnitude * scaleY;
+                
+                if (omega === -Math.PI) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标记主要频率点
+            markFrequencyPoints(ctx, width, height, centerY, scaleX);
+        }
+        
+        function plotPhaseSpectrum(type, N) {
+            const canvas = document.getElementById('phaseSpectrum');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerY = height / 2;
+            const scaleX = width / (2 * Math.PI);
+            const scaleY = height * 0.3 / Math.PI;
+            
+            // 画坐标轴
+            drawAxes(ctx, width, height, centerY, 'ω', '∠X(e^jω)');
+            
+            // 画±π参考线
+            ctx.strokeStyle = '#ddd';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(20, centerY - Math.PI * scaleY);
+            ctx.lineTo(width - 20, centerY - Math.PI * scaleY);
+            ctx.moveTo(20, centerY + Math.PI * scaleY);
+            ctx.lineTo(width - 20, centerY + Math.PI * scaleY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 计算并绘制相位谱
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let firstPoint = true;
+            for (let omega = -Math.PI; omega <= Math.PI; omega += 0.02) {
+                const phase = calculatePhaseSpectrum(type, N, omega);
+                const x = width/2 + omega * scaleX;
+                const y = centerY - phase * scaleY;
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标记相位值
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText('π', 15, centerY - Math.PI * scaleY + 3);
+            ctx.fillText('0', 15, centerY + 3);
+            ctx.fillText('-π', 15, centerY + Math.PI * scaleY + 3);
+        }
+        
+        function calculateMagnitudeSpectrum(type, N, omega) {
+            let magnitude = 0;
+            
+            switch (type) {
+                case 'rectangular':
+                    if (Math.abs(omega) < 1e-6) {
+                        magnitude = N;
+                    } else {
+                        magnitude = Math.abs(Math.sin(omega * N / 2) / Math.sin(omega / 2));
+                    }
+                    break;
+                case 'exponential':
+                    const a = 0.7;
+                    magnitude = 1 / Math.sqrt(1 + a*a - 2*a*Math.cos(omega));
+                    break;
+                case 'sinc':
+                    // sinc序列的近似
+                    magnitude = Math.abs(Math.sin(omega * 3) / (omega * 3)) || 1;
+                    break;
+                case 'triangular':
+                    const tri_mag = Math.pow(Math.sin(omega * N / 2) / Math.sin(omega / 2), 2);
+                    magnitude = Math.abs(tri_mag) / N;
+                    break;
+            }
+            
+            return Math.min(magnitude, 5); // 限制最大值
+        }
+        
+        function calculatePhaseSpectrum(type, N, omega) {
+            let phase = 0;
+            
+            switch (type) {
+                case 'rectangular':
+                    phase = -omega * (N - 1) / 2;
+                    break;
+                case 'exponential':
+                    const a = 0.7;
+                    phase = -Math.atan2(a * Math.sin(omega), 1 - a * Math.cos(omega));
+                    break;
+                case 'sinc':
+                    phase = omega > 0 ? -omega : omega;
+                    break;
+                case 'triangular':
+                    phase = -omega * (N - 1) / 2;
+                    break;
+            }
+            
+            // 将相位限制在[-π, π]范围内
+            while (phase > Math.PI) phase -= 2 * Math.PI;
+            while (phase < -Math.PI) phase += 2 * Math.PI;
+            
+            return phase;
+        }
+        
+        function drawAxes(ctx, width, height, centerY, xLabel, yLabel) {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // x轴
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            // y轴
+            ctx.beginPath();
+            ctx.moveTo(width/2, 20);
+            ctx.lineTo(width/2, height - 20);
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(xLabel, width - 10, centerY + 15);
+            ctx.fillText(yLabel, width/2, 15);
+        }
+        
+        function markFrequencyPoints(ctx, width, height, centerY, scaleX) {
+            const points = [-Math.PI, -Math.PI/2, 0, Math.PI/2, Math.PI];
+            const labels = ['-π', '-π/2', '0', 'π/2', 'π'];
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            
+            points.forEach((point, index) => {
+                const x = width/2 + point * scaleX;
+                
+                // 刻度线
+                ctx.beginPath();
+                ctx.moveTo(x, centerY - 3);
+                ctx.lineTo(x, centerY + 3);
+                ctx.stroke();
+                
+                // 标签
+                ctx.fillText(labels[index], x, centerY + 15);
+            });
+        }
+        
+        function plotDTFTComparison() {
+            const canvas = document.getElementById('dtftComparison');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const seq1Type = document.getElementById('seq1Type').value;
+            const seq2Type = document.getElementById('seq2Type').value;
+            
+            // 分成两个子图
+            const subHeight = height / 2;
+            
+            // 绘制第一个序列的频谱
+            drawSingleSpectrum(ctx, seq1Type, 0, subHeight, width, '序列1频谱', 'red');
+            
+            // 绘制第二个序列的频谱
+            drawSingleSpectrum(ctx, seq2Type, subHeight, subHeight, width, '序列2频谱', 'blue');
+        }
+        
+        function drawSingleSpectrum(ctx, seqType, offsetY, subHeight, width, title, color) {
+            const centerY = offsetY + subHeight * 0.8;
+            const scaleX = width / (2 * Math.PI);
+            const scaleY = subHeight * 0.3;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            // 绘制频谱
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let omega = -Math.PI; omega <= Math.PI; omega += 0.02) {
+                const magnitude = getSpectrumForType(seqType, omega);
+                const x = width/2 + omega * scaleX;
+                const y = centerY - magnitude * scaleY;
+                
+                if (omega === -Math.PI) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标题
+            ctx.fillStyle = color;
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width/2, offsetY + 20);
+        }
+        
+        function getSpectrumForType(seqType, omega) {
+            switch (seqType) {
+                case 'rect4':
+                    return calculateMagnitudeSpectrum('rectangular', 4, omega);
+                case 'rect8':
+                    return calculateMagnitudeSpectrum('rectangular', 8, omega);
+                case 'exp0.5':
+                    const a1 = 0.5;
+                    return 1 / Math.sqrt(1 + a1*a1 - 2*a1*Math.cos(omega));
+                case 'exp0.8':
+                    const a2 = 0.8;
+                    return 1 / Math.sqrt(1 + a2*a2 - 2*a2*Math.cos(omega));
+                default:
+                    return 0;
+            }
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            plotSpectrum();
+            plotDTFTComparison();
+        };
+    </script>
+</body>
+</html>

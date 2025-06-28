@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>序列的z变换</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .z-plane {
+            position: relative;
+            display: inline-block;
+            margin: 20px;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .convergence-region {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 第二章：序列的z变换</h1>
+        
+        <h2>2.1 z变换的定义</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本定义</h3>
+            <p>序列 x[n] 的<strong>z变换</strong>定义为：</p>
+            <div class="formula">
+                X(z) = ∑<sub>n=-∞</sub><sup>∞</sup> x[n]z<sup>-n</sup>
+            </div>
+            <p>其中：</p>
+            <ul>
+                <li><strong>z</strong>：复变量，z = re<sup>jω</sup> = r(cosω + jsinω)</li>
+                <li><strong>X(z)</strong>：x[n]的z变换</li>
+                <li><strong>r</strong>：z的模长</li>
+                <li><strong>ω</strong>：z的幅角</li>
+            </ul>
+        </div>
+        
+        <div class="important">
+            <h3>🎯 重要理解</h3>
+            <p>z变换是连续时间拉普拉斯变换在离散时间的对应形式，将时域的序列变换到z域的函数。</p>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>z变换的物理意义</h3>
+            <p>可以将z变换理解为：</p>
+            <ol>
+                <li><strong>数学工具</strong>：将差分方程转化为代数方程</li>
+                <li><strong>频域分析</strong>：当|z|=1时，即单位圆上，z变换退化为DTFT</li>
+                <li><strong>系统分析</strong>：便于分析系统的稳定性和频率响应</li>
+            </ol>
+        </div>
+        
+        <h2>2.2 收敛域（Region of Convergence, ROC）</h2>
+        
+        <div class="knowledge-point">
+            <h3>收敛域的定义</h3>
+            <p>z变换的<strong>收敛域</strong>是使级数 ∑<sub>n=-∞</sub><sup>∞</sup> x[n]z<sup>-n</sup> 绝对收敛的z值的集合。</p>
+            
+            <div class="formula">
+                ROC: |∑<sub>n=-∞</sub><sup>∞</sup> x[n]z<sup>-n</sup>| < ∞
+            </div>
+            
+            <div class="convergence-region">
+                <strong>收敛条件：</strong>
+                <p>∑<sub>n=-∞</sub><sup>∞</sup> |x[n]||z|<sup>-n</sup> < ∞</p>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>收敛域的性质</h3>
+            <ol>
+                <li><strong>环形区域</strong>：ROC总是以原点为中心的环形区域</li>
+                <li><strong>不包含极点</strong>：ROC不能包含X(z)的任何极点</li>
+                <li><strong>连通性</strong>：ROC是连通的</li>
+                <li><strong>有限长序列</strong>：ROC为整个z平面（除了可能的0或∞）</li>
+                <li><strong>右边序列</strong>：ROC为|z| > R<sub>+</sub>的外部区域</li>
+                <li><strong>左边序列</strong>：ROC为|z| < R<sub>-</sub>的内部区域</li>
+                <li><strong>双边序列</strong>：ROC为环形区域R<sub>-</sub> < |z| < R<sub>+</sub></li>
+            </ol>
+        </div>
+        
+        <div class="plot-container">
+            <h3>收敛域可视化</h3>
+            <canvas id="rocPlot" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>序列类型：</label>
+                <select id="sequenceROC">
+                    <option value="right">右边序列 (n ≥ 0)</option>
+                    <option value="left">左边序列 (n ≤ 0)</option>
+                    <option value="two-sided">双边序列</option>
+                    <option value="finite">有限长序列</option>
+                </select>
+                <label>内半径：</label>
+                <input type="number" id="innerRadius" value="0.5" step="0.1" min="0" max="2">
+                <label>外半径：</label>
+                <input type="number" id="outerRadius" value="2" step="0.1" min="0.1" max="5">
+                <button onclick="plotROC()">更新ROC图</button>
+            </div>
+        </div>
+        
+        <h2>2.3 常见序列的z变换</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本序列的z变换表</h3>
+            <table>
+                <tr>
+                    <th>序列 x[n]</th>
+                    <th>z变换 X(z)</th>
+                    <th>收敛域 ROC</th>
+                </tr>
+                <tr>
+                    <td>δ[n]</td>
+                    <td>1</td>
+                    <td>整个z平面</td>
+                </tr>
+                <tr>
+                    <td>u[n]</td>
+                    <td>z/(z-1)</td>
+                    <td>|z| > 1</td>
+                </tr>
+                <tr>
+                    <td>-u[-n-1]</td>
+                    <td>z/(z-1)</td>
+                    <td>|z| < 1</td>
+                </tr>
+                <tr>
+                    <td>a<sup>n</sup>u[n]</td>
+                    <td>z/(z-a)</td>
+                    <td>|z| > |a|</td>
+                </tr>
+                <tr>
+                    <td>-a<sup>n</sup>u[-n-1]</td>
+                    <td>z/(z-a)</td>
+                    <td>|z| < |a|</td>
+                </tr>
+                <tr>
+                    <td>na<sup>n</sup>u[n]</td>
+                    <td>az/(z-a)<sup>2</sup></td>
+                    <td>|z| > |a|</td>
+                </tr>
+                <tr>
+                    <td>cos(ω₀n)u[n]</td>
+                    <td>z(z-cosω₀)/(z²-2zcosω₀+1)</td>
+                    <td>|z| > 1</td>
+                </tr>
+                <tr>
+                    <td>sin(ω₀n)u[n]</td>
+                    <td>zsinω₀/(z²-2zcosω₀+1)</td>
+                    <td>|z| > 1</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>z变换计算步骤</h3>
+            <ol>
+                <li><strong>分离序列</strong>：将序列分为右边、左边或有限长部分</li>
+                <li><strong>应用定义</strong>：直接计算级数或查表</li>
+                <li><strong>确定ROC</strong>：根据序列性质确定收敛域</li>
+                <li><strong>化简表达式</strong>：合并同类项，化为最简形式</li>
+            </ol>
+        </div>
+        
+        <div class="example">
+            <h4>例题：求指数序列的z变换</h4>
+            <p><strong>问题：</strong>求 x[n] = a<sup>n</sup>u[n] 的z变换</p>
+            <p><strong>解：</strong></p>
+            <div class="formula">
+                X(z) = ∑<sub>n=0</sub><sup>∞</sup> a<sup>n</sup>z<sup>-n</sup> = ∑<sub>n=0</sub><sup>∞</sup> (az<sup>-1</sup>)<sup>n</sup>
+            </div>
+            <p>这是一个几何级数，当 |az<sup>-1</sup>| < 1 即 |z| > |a| 时收敛：</p>
+            <div class="formula">
+                X(z) = 1/(1-az<sup>-1</sup>) = z/(z-a), &nbsp;&nbsp; ROC: |z| > |a|
+            </div>
+        </div>
+        
+        <h2>2.4 收敛域的重要性</h2>
+        
+        <div class="knowledge-point">
+            <h3>为什么ROC如此重要？</h3>
+            
+            <div class="important">
+                <p><strong>关键点：</strong>不同的序列可能有相同的z变换表达式，但ROC不同！</p>
+            </div>
+            
+            <div class="example">
+                <h4>经典例子</h4>
+                <p>考虑两个不同的序列：</p>
+                <ul>
+                    <li>x₁[n] = a<sup>n</sup>u[n] &nbsp;&nbsp;→&nbsp;&nbsp; X₁(z) = z/(z-a), |z| > |a|</li>
+                    <li>x₂[n] = -a<sup>n</sup>u[-n-1] &nbsp;&nbsp;→&nbsp;&nbsp; X₂(z) = z/(z-a), |z| < |a|</li>
+                </ul>
+                <p><span class="highlight">相同的代数表达式，不同的ROC，对应完全不同的序列！</span></p>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>z变换计算器</h3>
+            <canvas id="ztransformPlot" width="600" height="300"></canvas>
+            <div class="controls">
+                <label>选择序列：</label>
+                <select id="exampleSequence">
+                    <option value="unit_step">u[n]</option>
+                    <option value="exponential">a^n u[n]</option>
+                    <option value="exponential_left">-a^n u[-n-1]</option>
+                    <option value="ramp">n u[n]</option>
+                </select>
+                <label>参数a：</label>
+                <input type="number" id="paramA" value="0.5" step="0.1" min="-2" max="2">
+                <button onclick="calculateZTransform()">计算z变换</button>
+            </div>
+            <div id="ztransformResult" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：基本z变换</h4>
+            <p>求下列序列的z变换及其ROC：</p>
+            <ol>
+                <li>x₁[n] = (1/2)<sup>n</sup>u[n]</li>
+                <li>x₂[n] = 2<sup>n</sup>u[-n-1]</li>
+                <li>x₃[n] = δ[n-2]</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                1. X₁(z) = z/(z-1/2), ROC: |z| > 1/2<br>
+                2. X₂(z) = z/(z-2), ROC: |z| < 2<br>
+                3. X₃(z) = z⁻², ROC: 整个z平面（除z=0）
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：收敛域判断</h4>
+            <p>已知 X(z) = z²/((z-1/2)(z-2))，问：</p>
+            <ol>
+                <li>该z变换可能对应几种不同的序列？</li>
+                <li>写出每种情况的ROC</li>
+                <li>哪种情况对应稳定的因果序列？</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                1. 可能对应3种不同序列<br>
+                2. ROC₁: |z| > 2（右边序列）<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;ROC₂: |z| < 1/2（左边序列）<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;ROC₃: 1/2 < |z| < 2（双边序列）<br>
+                3. ROC₁对应稳定的因果序列（包含单位圆）
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：ROC性质应用</h4>
+            <p>序列 x[n] = a<sup>n</sup>u[n] + b<sup>n</sup>u[-n-1]，其中 |a| < |b|</p>
+            <p>求：</p>
+            <ol>
+                <li>X(z)的表达式</li>
+                <li>ROC</li>
+                <li>什么条件下序列稳定？</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                1. X(z) = z/(z-a) + z/(z-b) = z(2z-a-b)/((z-a)(z-b))<br>
+                2. ROC: |a| < |z| < |b|（当|a| < |b|时）<br>
+                3. 稳定条件：ROC包含单位圆，即|a| < 1 < |b|
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：复数序列的z变换</h4>
+            <p>求 x[n] = e<sup>jω₀n</sup>u[n] 的z变换和ROC</p>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                令 a = e^(jω₀)，则 |a| = 1<br>
+                X(z) = z/(z-e^(jω₀)), ROC: |z| > 1<br>
+                这对应单位圆上的复指数序列
+            </div>
+        </div>
+        
+        <h2>2.5 学习要点总结</h2>
+        
+        <div class="important">
+            <h3>🎯 必须掌握的要点</h3>
+            <ol>
+                <li><strong>定义记忆</strong>：X(z) = ∑ x[n]z⁻ⁿ</li>
+                <li><strong>ROC性质</strong>：不同ROC对应不同序列</li>
+                <li><strong>基本变换对</strong>：熟记常用序列的z变换</li>
+                <li><strong>稳定性判断</strong>：ROC包含单位圆则系统稳定</li>
+                <li><strong>因果性判断</strong>：右边序列对应因果系统</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // 绘制ROC区域
+        function plotROC() {
+            const canvas = document.getElementById('rocPlot');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const sequenceType = document.getElementById('sequenceROC').value;
+            const innerR = parseFloat(document.getElementById('innerRadius').value);
+            const outerR = parseFloat(document.getElementById('outerRadius').value);
+            
+            // 左右两个子图
+            const leftCenter = {x: width/4, y: height/2};
+            const rightCenter = {x: 3*width/4, y: height/2};
+            const radius = Math.min(width/4, height/2) - 20;
+            
+            // 绘制左图：z平面
+            drawZPlane(ctx, leftCenter, radius, sequenceType, innerR, outerR);
+            
+            // 绘制右图：序列示例
+            drawSequenceExample(ctx, rightCenter, radius, sequenceType);
+        }
+        
+        function drawZPlane(ctx, center, maxRadius, type, innerR, outerR) {
+            // 画坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // 实轴
+            ctx.beginPath();
+            ctx.moveTo(center.x - maxRadius, center.y);
+            ctx.lineTo(center.x + maxRadius, center.y);
+            ctx.stroke();
+            
+            // 虚轴
+            ctx.beginPath();
+            ctx.moveTo(center.x, center.y - maxRadius);
+            ctx.lineTo(center.x, center.y + maxRadius);
+            ctx.stroke();
+            
+            // 单位圆
+            ctx.strokeStyle = '#666';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, maxRadius * 0.3, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 标记
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Re', center.x + maxRadius - 10, center.y + 15);
+            ctx.fillText('Im', center.x - 10, center.y - maxRadius + 20);
+            ctx.fillText('|z|=1', center.x + maxRadius * 0.3 + 15, center.y - 5);
+            
+            // 绘制ROC
+            const scale = maxRadius * 0.3; // 单位圆半径
+            let rocInnerR = innerR * scale;
+            let rocOuterR = outerR * scale;
+            
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            
+            switch (type) {
+                case 'right':
+                    // |z| > R+
+                    rocInnerR = innerR * scale;
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, maxRadius, 0, 2 * Math.PI);
+                    ctx.arc(center.x, center.y, rocInnerR, 0, 2 * Math.PI, true);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, rocInnerR, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                    
+                case 'left':
+                    // |z| < R-
+                    rocOuterR = outerR * scale;
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, rocOuterR, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, rocOuterR, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                    
+                case 'two-sided':
+                    // R- < |z| < R+
+                    rocInnerR = innerR * scale;
+                    rocOuterR = outerR * scale;
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, rocOuterR, 0, 2 * Math.PI);
+                    ctx.arc(center.x, center.y, rocInnerR, 0, 2 * Math.PI, true);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, rocInnerR, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, rocOuterR, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                    
+                case 'finite':
+                    // 整个z平面（除了可能的原点）
+                    ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+                    ctx.beginPath();
+                    ctx.arc(center.x, center.y, maxRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    break;
+            }
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('z平面及ROC', center.x, center.y - maxRadius - 10);
+        }
+        
+        function drawSequenceExample(ctx, center, maxRadius, type) {
+            // 绘制序列示例
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // 坐标轴
+            ctx.beginPath();
+            ctx.moveTo(center.x - maxRadius, center.y);
+            ctx.lineTo(center.x + maxRadius, center.y);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(center.x, center.y - maxRadius);
+            ctx.lineTo(center.x, center.y + maxRadius);
+            ctx.stroke();
+            
+            // 生成示例序列
+            const samples = [];
+            const nRange = [-5, 5];
+            const scaleX = maxRadius / 6;
+            const scaleY = maxRadius * 0.3;
+            
+            for (let n = nRange[0]; n <= nRange[1]; n++) {
+                let value = 0;
+                switch (type) {
+                    case 'right':
+                        value = n >= 0 ? Math.pow(0.7, n) : 0;
+                        break;
+                    case 'left':
+                        value = n <= 0 ? Math.pow(1.3, -n) : 0;
+                        break;
+                    case 'two-sided':
+                        if (n >= 0) {
+                            value = Math.pow(0.7, n);
+                        } else {
+                            value = Math.pow(1.3, -n);
+                        }
+                        break;
+                    case 'finite':
+                        value = (n >= -2 && n <= 2) ? 1 - 0.2 * Math.abs(n) : 0;
+                        break;
+                }
+                samples.push({n: n, value: value});
+            }
+            
+            // 绘制序列
+            ctx.strokeStyle = 'blue';
+            ctx.fillStyle = 'blue';
+            ctx.lineWidth = 2;
+            
+            samples.forEach(sample => {
+                const x = center.x + sample.n * scaleX;
+                const y = center.y - sample.value * scaleY;
+                
+                // 茎
+                ctx.beginPath();
+                ctx.moveTo(x, center.y);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // 点
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            
+            let title = '';
+            switch (type) {
+                case 'right': title = '右边序列示例'; break;
+                case 'left': title = '左边序列示例'; break;
+                case 'two-sided': title = '双边序列示例'; break;
+                case 'finite': title = '有限长序列示例'; break;
+            }
+            ctx.fillText(title, center.x, center.y - maxRadius - 10);
+        }
+        
+        // 计算z变换
+        function calculateZTransform() {
+            const sequence = document.getElementById('exampleSequence').value;
+            const a = parseFloat(document.getElementById('paramA').value);
+            const resultDiv = document.getElementById('ztransformResult');
+            
+            let result = '';
+            
+            switch (sequence) {
+                case 'unit_step':
+                    result = `
+                        <strong>序列：</strong> u[n]<br>
+                        <strong>z变换：</strong> X(z) = z/(z-1)<br>
+                        <strong>ROC：</strong> |z| > 1
+                    `;
+                    break;
+                case 'exponential':
+                    result = `
+                        <strong>序列：</strong> ${a}^n u[n]<br>
+                        <strong>z变换：</strong> X(z) = z/(z-${a})<br>
+                        <strong>ROC：</strong> |z| > ${Math.abs(a)}
+                    `;
+                    break;
+                case 'exponential_left':
+                    result = `
+                        <strong>序列：</strong> -${a}^n u[-n-1]<br>
+                        <strong>z变换：</strong> X(z) = z/(z-${a})<br>
+                        <strong>ROC：</strong> |z| < ${Math.abs(a)}
+                    `;
+                    break;
+                case 'ramp':
+                    result = `
+                        <strong>序列：</strong> n u[n]<br>
+                        <strong>z变换：</strong> X(z) = z/(z-1)²<br>
+                        <strong>ROC：</strong> |z| > 1
+                    `;
+                    break;
+            }
+            
+            resultDiv.innerHTML = result;
+            
+            // 同时绘制对应的序列
+            plotSequenceForZTransform(sequence, a);
+        }
+        
+        function plotSequenceForZTransform(sequence, a) {
+            const canvas = document.getElementById('ztransformPlot');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height * 0.8;
+            const scaleX = 30;
+            const scaleY = 40;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, 20);
+            ctx.lineTo(centerX, height - 20);
+            ctx.stroke();
+            
+            // 生成序列
+            const samples = {};
+            for (let n = -8; n <= 8; n++) {
+                switch (sequence) {
+                    case 'unit_step':
+                        samples[n] = n >= 0 ? 1 : 0;
+                        break;
+                    case 'exponential':
+                        samples[n] = n >= 0 ? Math.pow(a, n) : 0;
+                        break;
+                    case 'exponential_left':
+                        samples[n] = n <= 0 ? -Math.pow(a, -n) : 0;
+                        break;
+                    case 'ramp':
+                        samples[n] = n >= 0 ? n : 0;
+                        break;
+                }
+            }
+            
+            // 绘制序列
+            ctx.strokeStyle = 'red';
+            ctx.fillStyle = 'red';
+            ctx.lineWidth = 2;
+            
+            for (let n in samples) {
+                const x = centerX + parseInt(n) * scaleX;
+                const y = centerY - samples[n] * scaleY;
+                
+                if (x > 20 && x < width - 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('选定序列的时域表示', centerX, 15);
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            plotROC();
+            calculateZTransform();
+        };
+    </script>
+</body>
+</html>

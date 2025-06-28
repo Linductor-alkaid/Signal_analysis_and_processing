@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离散傅里叶级数(DFS)</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .symmetry-box {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .duality-box {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .comparison-table {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .comparison-item h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .period-demo {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .period-part {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 第四章：离散傅里叶级数(DFS)</h1>
+        
+        <h2>4.1 傅里叶变换的对称规律</h2>
+        
+        <div class="knowledge-point">
+            <h3>时域-频域对称性概述</h3>
+            <p>傅里叶变换具有深刻的<strong>对称性质</strong>，理解这种对称性是掌握各种傅里叶变换的关键。</p>
+        </div>
+        
+        <div class="symmetry-box">
+            <h3>🔄 四种傅里叶变换的对称关系</h3>
+            <div class="comparison-table">
+                <div class="comparison-item">
+                    <h4>连续时间 - 连续频率</h4>
+                    <p><strong>傅里叶变换 (FT)</strong></p>
+                    <p>时域：连续</p>
+                    <p>频域：连续</p>
+                </div>
+                <div class="comparison-item">
+                    <h4>离散时间 - 连续频率</h4>
+                    <p><strong>DTFT</strong></p>
+                    <p>时域：离散</p>
+                    <p>频域：连续周期</p>
+                </div>
+                <div class="comparison-item">
+                    <h4>连续时间 - 离散频率</h4>
+                    <p><strong>傅里叶级数 (FS)</strong></p>
+                    <p>时域：连续周期</p>
+                    <p>频域：离散</p>
+                </div>
+                <div class="comparison-item">
+                    <h4>离散时间 - 离散频率</h4>
+                    <p><strong>DFS/DFT</strong></p>
+                    <p>时域：离散周期</p>
+                    <p>频域：离散周期</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="duality-box">
+            <h3>🎯 对称规律总结</h3>
+            <ol>
+                <li><strong>时域离散化</strong> ↔ <strong>频域周期化</strong></li>
+                <li><strong>时域周期化</strong> ↔ <strong>频域离散化</strong></li>
+                <li><strong>时域有限</strong> ↔ <strong>频域无限</strong></li>
+                <li><strong>时域无限</strong> ↔ <strong>频域可能有限</strong></li>
+            </ol>
+            <p class="highlight">DFS/DFT是唯一既离散又周期的变换，在数字信号处理中最为实用！</p>
+        </div>
+        
+        <h2>4.2 离散傅里叶级数(DFS)的定义</h2>
+        
+        <div class="knowledge-point">
+            <h3>周期序列的表示</h3>
+            <p>对于周期为N的离散周期序列 x[n]，满足：</p>
+            <div class="formula">
+                x[n] = x[n + N], ∀n
+            </div>
+            <p>其离散傅里叶级数表示为：</p>
+            <div class="formula">
+                x[n] = (1/N) ∑<sub>k=0</sub><sup>N-1</sup> X[k]e<sup>j2πkn/N</sup>
+            </div>
+            <p>其中X[k]是DFS系数。</p>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>DFS正变换和逆变换</h3>
+            
+            <h4>正变换（分析公式）</h4>
+            <div class="formula">
+                X[k] = ∑<sub>n=0</sub><sup>N-1</sup> x[n]e<sup>-j2πkn/N</sup>, k = 0,1,...,N-1
+            </div>
+            
+            <h4>逆变换（综合公式）</h4>
+            <div class="formula">
+                x[n] = (1/N) ∑<sub>k=0</sub><sup>N-1</sup> X[k]e<sup>j2πkn/N</sup>, n = 0,1,...,N-1
+            </div>
+            
+            <div class="important">
+                <p><strong>记忆技巧：</strong></p>
+                <ul>
+                    <li>正变换：负指数，无(1/N)</li>
+                    <li>逆变换：正指数，有(1/N)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>DFS的重要性质</h3>
+            
+            <h4>1. 周期性</h4>
+            <div class="formula">
+                X[k] = X[k + N]，x[n] = x[n + N]
+            </div>
+            <p>时域和频域都具有相同的周期N</p>
+            
+            <h4>2. 对称性（实序列）</h4>
+            <div class="formula">
+                X[k] = X*[N-k] = X*[-k]
+            </div>
+            
+            <h4>3. 线性</h4>
+            <div class="formula">
+                ax₁[n] + bx₂[n] ↔ aX₁[k] + bX₂[k]
+            </div>
+            
+            <h4>4. 时移</h4>
+            <div class="formula">
+                x[n-n₀] ↔ X[k]e<sup>-j2πkn₀/N</sup>
+            </div>
+            
+            <h4>5. 频移</h4>
+            <div class="formula">
+                x[n]e<sup>j2πk₀n/N</sup> ↔ X[k-k₀]
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>DFS演示：周期序列及其频谱</h3>
+            <div class="period-demo">
+                <div class="period-part">
+                    <canvas id="periodicSequence" width="350" height="250"></canvas>
+                    <p>周期序列 x[n]</p>
+                </div>
+                <div class="period-part">
+                    <canvas id="dfsSpectrum" width="350" height="250"></canvas>
+                    <p>DFS系数 X[k]</p>
+                </div>
+            </div>
+            <div class="controls">
+                <label>序列类型：</label>
+                <select id="periodicType">
+                    <option value="rectangular">矩形脉冲</option>
+                    <option value="triangular">三角波</option>
+                    <option value="sawtooth">锯齿波</option>
+                    <option value="cosine">余弦波</option>
+                </select>
+                <label>周期N：</label>
+                <input type="number" id="periodN" value="8" min="4" max="16">
+                <label>脉冲宽度：</label>
+                <input type="number" id="pulseWidth" value="3" min="1" max="8">
+                <button onclick="plotDFS()">计算DFS</button>
+            </div>
+        </div>
+        
+        <h2>4.3 DFS与DTFT的关系</h2>
+        
+        <div class="knowledge-point">
+            <h3>从DTFT到DFS</h3>
+            <p>周期序列的DTFT是冲激函数的线性组合：</p>
+            <div class="formula">
+                X(e<sup>jω</sup>) = (2π/N) ∑<sub>k=0</sub><sup>N-1</sup> X[k]δ(ω - 2πk/N)
+            </div>
+            <p>其中X[k]就是DFS系数。</p>
+        </div>
+        
+        <div class="example">
+            <h4>关系理解</h4>
+            <ul>
+                <li><strong>DFS系数X[k]</strong>：DTFT在ω = 2πk/N处的"样本"（除去2π/N因子）</li>
+                <li><strong>频率采样</strong>：DFS可以看作DTFT的频率域采样</li>
+                <li><strong>周期延拓</strong>：有限长序列周期延拓后的DFS</li>
+            </ul>
+        </div>
+        
+        <h2>4.4 DFS计算实例</h2>
+        
+        <div class="example">
+            <h4>例题：矩形脉冲序列的DFS</h4>
+            <p><strong>问题：</strong>求周期矩形脉冲序列的DFS系数</p>
+            <p>设 x[n] = {1, 0≤n≤L-1; 0, L≤n≤N-1}，周期为N</p>
+            
+            <p><strong>解：</strong></p>
+            <div class="formula">
+                X[k] = ∑<sub>n=0</sub><sup>L-1</sup> e<sup>-j2πkn/N</sup> = (1-e<sup>-j2πkL/N</sup>)/(1-e<sup>-j2πk/N</sup>)
+            </div>
+            
+            <p>当k ≠ 0时：</p>
+            <div class="formula">
+                X[k] = e<sup>-jπk(L-1)/N</sup> · sin(πkL/N)/sin(πk/N)
+            </div>
+            
+            <p>当k = 0时：</p>
+            <div class="formula">
+                X[0] = L
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>DFS计算器</h3>
+            <canvas id="dfsCalculator" width="800" height="300"></canvas>
+            <div class="controls">
+                <label>自定义序列(用逗号分隔)：</label>
+                <input type="text" id="customSequence" value="1,1,0,0,0,0,0,0" placeholder="例: 1,1,0,0">
+                <button onclick="calculateCustomDFS()">计算DFS</button>
+            </div>
+            <div id="dfsResult" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <h2>4.5 DFS的应用</h2>
+        
+        <div class="knowledge-point">
+            <h3>主要应用领域</h3>
+            <ol>
+                <li><strong>周期信号分析</strong>：分解为谐波分量</li>
+                <li><strong>DFT的基础</strong>：DFS是DFT的理论基础</li>
+                <li><strong>频谱分析</strong>：周期序列的频率内容</li>
+                <li><strong>滤波器设计</strong>：周期性滤波器的频率响应</li>
+                <li><strong>信号重构</strong>：由频谱系数重构时域信号</li>
+            </ol>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>DFS vs DTFT vs DFT对比</h3>
+            <table>
+                <tr>
+                    <th>变换类型</th>
+                    <th>时域特点</th>
+                    <th>频域特点</th>
+                    <th>适用信号</th>
+                    <th>计算复杂度</th>
+                </tr>
+                <tr>
+                    <td>DTFT</td>
+                    <td>离散、无限长</td>
+                    <td>连续、周期</td>
+                    <td>任意序列</td>
+                    <td>解析计算</td>
+                </tr>
+                <tr>
+                    <td>DFS</td>
+                    <td>离散、周期</td>
+                    <td>离散、周期</td>
+                    <td>周期序列</td>
+                    <td>O(N²)</td>
+                </tr>
+                <tr>
+                    <td>DFT</td>
+                    <td>离散、有限长</td>
+                    <td>离散、周期</td>
+                    <td>有限长序列</td>
+                    <td>O(N²) 或 O(NlogN)</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：DFS基本计算</h4>
+            <p>求周期序列 x[n] = {2, 1, 0, 1} （周期N=4）的DFS系数 X[k]</p>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                X[0] = 2 + 1 + 0 + 1 = 4<br>
+                X[1] = 2 + 1·e^(-jπ/2) + 0·e^(-jπ) + 1·e^(-j3π/2) = 2 - j + 0 + j = 2<br>
+                X[2] = 2 + 1·e^(-jπ) + 0·e^(-j2π) + 1·e^(-j3π) = 2 - 1 + 0 - 1 = 0<br>
+                X[3] = 2 + 1·e^(-j3π/2) + 0·e^(-j3π) + 1·e^(-j9π/2) = 2 + j + 0 - j = 2
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：对称性应用</h4>
+            <p>已知实周期序列的DFS系数为：X[0]=6, X[1]=2+j, X[2]=0, X[3]=?</p>
+            <p>利用对称性求X[3]（周期N=4）</p>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                由于实序列的对称性：X[k] = X*[N-k]<br>
+                X[3] = X*[4-3] = X*[1] = (2+j)* = 2-j
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：时移性质</h4>
+            <p>已知周期序列x[n]的DFS为X[k]，求y[n] = x[n-2]的DFS Y[k]（周期N=8）</p>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                根据时移性质：Y[k] = X[k]·e^(-j2πk·2/8) = X[k]·e^(-jπk/2)<br>
+                即：Y[k] = X[k]·(-j)^k
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：DFS与DTFT关系</h4>
+            <p>有限长序列h[n] = {1, 2, 1}的DTFT为H(e^jω)，将其周期延拓为周期N=6的序列，求DFS系数</p>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                周期延拓序列：{1, 2, 1, 0, 0, 0}，周期N=6<br>
+                DFS系数：X[k] = H(e^j2πk/6), k = 0,1,2,3,4,5<br>
+                H(e^jω) = 1 + 2e^(-jω) + e^(-j2ω)<br>
+                因此：X[k] = 1 + 2e^(-j2πk/6) + e^(-j4πk/6)
+            </div>
+        </div>
+        
+        <h2>4.6 学习要点总结</h2>
+        
+        <div class="important">
+            <h3>🎯 核心要点</h3>
+            <ol>
+                <li><strong>对称规律</strong>：时域离散↔频域周期，时域周期↔频域离散</li>
+                <li><strong>DFS定义</strong>：周期序列的频域表示，时频双周期</li>
+                <li><strong>计算公式</strong>：正变换（负指数）、逆变换（正指数，1/N）</li>
+                <li><strong>重要性质</strong>：周期性、对称性、线性、时移、频移</li>
+                <li><strong>与DTFT关系</strong>：DFS系数是DTFT的频率采样</li>
+                <li><strong>应用价值</strong>：DFT的理论基础，周期信号分析工具</li>
+            </ol>
+        </div>
+        
+        <div class="duality-box">
+            <h3>🔗 承前启后</h3>
+            <p><strong>向前联系：</strong>DFS是DTFT对周期序列的特化</p>
+            <p><strong>向后连接：</strong>DFS是理解DFT的关键桥梁</p>
+            <p><strong>实用意义：</strong>为FFT算法和数字滤波器奠定理论基础</p>
+        </div>
+    </div>
+
+    <script>
+        // 生成周期序列
+        function generatePeriodicSequence(type, N, width) {
+            const sequence = [];
+            
+            for (let n = 0; n < N; n++) {
+                let value = 0;
+                
+                switch (type) {
+                    case 'rectangular':
+                        value = (n < width) ? 1 : 0;
+                        break;
+                    case 'triangular':
+                        if (n < N/2) {
+                            value = 2*n/(N-1);
+                        } else {
+                            value = 2*(N-1-n)/(N-1);
+                        }
+                        break;
+                    case 'sawtooth':
+                        value = n / (N-1);
+                        break;
+                    case 'cosine':
+                        value = Math.cos(2 * Math.PI * n / N);
+                        break;
+                }
+                
+                sequence.push(value);
+            }
+            
+            return sequence;
+        }
+        
+        // 计算DFS
+        function calculateDFS(x) {
+            const N = x.length;
+            const X = [];
+            
+            for (let k = 0; k < N; k++) {
+                let real = 0;
+                let imag = 0;
+                
+                for (let n = 0; n < N; n++) {
+                    const angle = -2 * Math.PI * k * n / N;
+                    real += x[n] * Math.cos(angle);
+                    imag += x[n] * Math.sin(angle);
+                }
+                
+                X.push({real: real, imag: imag, magnitude: Math.sqrt(real*real + imag*imag)});
+            }
+            
+            return X;
+        }
+        
+        // 绘制DFS演示
+        function plotDFS() {
+            const type = document.getElementById('periodicType').value;
+            const N = parseInt(document.getElementById('periodN').value);
+            const width = parseInt(document.getElementById('pulseWidth').value);
+            
+            // 生成序列
+            const sequence = generatePeriodicSequence(type, N, width);
+            
+            // 计算DFS
+            const dfsCoeffs = calculateDFS(sequence);
+            
+            // 绘制时域序列
+            plotSequence(sequence, 'periodicSequence', '周期序列 x[n]');
+            
+            // 绘制频域系数
+            plotDFSCoefficients(dfsCoeffs, 'dfsSpectrum', 'DFS系数幅度 |X[k]|');
+        }
+        
+        // 绘制序列
+        function plotSequence(data, canvasId, title) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerY = height * 0.8;
+            const scaleX = (width - 60) / (data.length + 1);
+            const maxVal = Math.max(...data.map(Math.abs)) || 1;
+            const scaleY = (height * 0.5) / maxVal;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(30, centerY);
+            ctx.lineTo(width - 30, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(50, 20);
+            ctx.lineTo(50, height - 20);
+            ctx.stroke();
+            
+            // 绘制序列
+            ctx.strokeStyle = 'blue';
+            ctx.fillStyle = 'blue';
+            ctx.lineWidth = 2;
+            
+            data.forEach((value, index) => {
+                const x = 50 + (index + 1) * scaleX;
+                const y = centerY - value * scaleY;
+                
+                // 茎
+                ctx.beginPath();
+                ctx.moveTo(x, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // 点
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 标记n值
+                if (index % Math.ceil(data.length/8) === 0) {
+                    ctx.fillStyle = '#333';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(index.toString(), x, centerY + 15);
+                    ctx.fillStyle = 'blue';
+                }
+            });
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width/2, 15);
+        }
+        
+        // 绘制DFS系数
+        function plotDFSCoefficients(coeffs, canvasId, title) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerY = height * 0.8;
+            const scaleX = (width - 60) / (coeffs.length + 1);
+            const maxMag = Math.max(...coeffs.map(c => c.magnitude)) || 1;
+            const scaleY = (height * 0.5) / maxMag;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(30, centerY);
+            ctx.lineTo(width - 30, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(50, 20);
+            ctx.lineTo(50, height - 20);
+            ctx.stroke();
+            
+            // 绘制幅度谱
+            ctx.strokeStyle = 'red';
+            ctx.fillStyle = 'red';
+            ctx.lineWidth = 2;
+            
+            coeffs.forEach((coeff, index) => {
+                const x = 50 + (index + 1) * scaleX;
+                const y = centerY - coeff.magnitude * scaleY;
+                
+                // 茎
+                ctx.beginPath();
+                ctx.moveTo(x, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // 点
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 标记k值
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(index.toString(), x, centerY + 15);
+                ctx.fillStyle = 'red';
+            });
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width/2, 15);
+        }
+        
+        // 计算自定义序列的DFS
+        function calculateCustomDFS() {
+            const input = document.getElementById('customSequence').value;
+            const sequence = input.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+            
+            if (sequence.length === 0) {
+                document.getElementById('dfsResult').innerHTML = '<span style="color: red;">请输入有效的序列！</span>';
+                return;
+            }
+            
+            const dfsCoeffs = calculateDFS(sequence);
+            
+            // 显示结果
+            let resultHTML = '<h4>DFS计算结果：</h4>';
+            resultHTML += '<table style="width: 100%; border-collapse: collapse;">';
+            resultHTML += '<tr><th>k</th><th>实部</th><th>虚部</th><th>幅度</th><th>相位(度)</th></tr>';
+            
+            dfsCoeffs.forEach((coeff, k) => {
+                const phase = Math.atan2(coeff.imag, coeff.real) * 180 / Math.PI;
+                resultHTML += `<tr>
+                    <td>${k}</td>
+                    <td>${coeff.real.toFixed(3)}</td>
+                    <td>${coeff.imag.toFixed(3)}</td>
+                    <td>${coeff.magnitude.toFixed(3)}</td>
+                    <td>${phase.toFixed(1)}°</td>
+                </tr>`;
+            });
+            
+            resultHTML += '</table>';
+            document.getElementById('dfsResult').innerHTML = resultHTML;
+            
+            // 绘制图形
+            plotSequenceAndSpectrum(sequence, dfsCoeffs);
+        }
+        
+        // 绘制序列和频谱
+        function plotSequenceAndSpectrum(sequence, coeffs) {
+            const canvas = document.getElementById('dfsCalculator');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 分成两部分
+            const halfWidth = width / 2;
+            
+            // 左边绘制时域序列
+            drawSubPlot(ctx, sequence, 0, halfWidth, height, '输入序列 x[n]', 'blue', 'stems');
+            
+            // 右边绘制频域系数
+            const magnitudes = coeffs.map(c => c.magnitude);
+            drawSubPlot(ctx, magnitudes, halfWidth, halfWidth, height, 'DFS幅度谱 |X[k]|', 'red', 'stems');
+        }
+        
+        // 绘制子图
+        function drawSubPlot(ctx, data, offsetX, subWidth, subHeight, title, color, type) {
+            const centerY = subHeight * 0.8;
+            const scaleX = (subWidth - 40) / (data.length + 1);
+            const maxVal = Math.max(...data.map(Math.abs)) || 1;
+            const scaleY = (subHeight * 0.5) / maxVal;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 20, centerY);
+            ctx.lineTo(offsetX + subWidth - 20, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 40, 20);
+            ctx.lineTo(offsetX + 40, subHeight - 20);
+            ctx.stroke();
+            
+            // 绘制数据
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            
+            if (type === 'stems') {
+                data.forEach((value, index) => {
+                    const x = offsetX + 40 + (index + 1) * scaleX;
+                    const y = centerY - value * scaleY;
+                    
+                    // 茎
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    // 点
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, offsetX + subWidth/2, 15);
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            plotDFS();
+            calculateCustomDFS();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信号分析与处理 - 数字滤波器的结构</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .structure-box {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .iir-box {
+            background: #f3e5f5;
+            border: 2px solid #9c27b0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .fir-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .signal-flow-demo {
+            background: #fff8e1;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .structure-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .structure-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .advantages-disadvantages {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .advantages {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .disadvantages {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .flowchart-node {
+            background: #ffffff;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 8px;
+            margin: 5px;
+            display: inline-block;
+            font-size: 12px;
+            text-align: center;
+            min-width: 60px;
+        }
+        
+        .delay-node {
+            background: #ffeb3b;
+            border-color: #fbc02d;
+        }
+        
+        .adder-node {
+            background: #4caf50;
+            border-color: #388e3c;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            line-height: 14px;
+            color: white;
+        }
+        
+        .multiplier-node {
+            background: #2196f3;
+            border-color: #1976d2;
+            color: white;
+        }
+        
+        .structure-comparison {
+            background: #f0f8ff;
+            border: 1px solid #87ceeb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .quantization-effects {
+            background: #ffeee8;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .implementation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .implementation-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .lattice-box {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 数字滤波器的结构</h1>
+        
+        <div class="important">
+            <h3>🎯 滤波器结构的重要性</h3>
+            <p>数字滤波器的<strong>结构</strong>决定了算法的实现方式，直接影响：</p>
+            <ul>
+                <li><strong>计算复杂度</strong>：乘法和加法运算的数量</li>
+                <li><strong>存储需求</strong>：延迟单元和系数存储</li>
+                <li><strong>量化敏感性</strong>：有限字长效应</li>
+                <li><strong>数值稳定性</strong>：舍入误差累积</li>
+                <li><strong>并行度</strong>：硬件实现的可并行性</li>
+            </ul>
+        </div>
+        
+        <h2>1. 数字滤波器结构的表示方法</h2>
+        
+        <div class="structure-box">
+            <h3>🟢 信号流图表示法</h3>
+            <p>信号流图是描述数字滤波器结构的标准方法，使用以下基本单元：</p>
+            
+            <div class="signal-flow-demo">
+                <h4>基本运算单元</h4>
+                <div style="display: flex; justify-content: space-around; align-items: center; margin: 20px 0;">
+                    <div style="text-align: center;">
+                        <div class="delay-node">z⁻¹</div>
+                        <p><strong>延迟单元</strong><br>存储一个样本</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="adder-node">+</div>
+                        <p><strong>加法器</strong><br>信号相加</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="multiplier-node">×</div>
+                        <p><strong>乘法器</strong><br>系数乘法</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="flowchart-node">分支点</div>
+                        <p><strong>分支节点</strong><br>信号分支</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>结构实现的考虑因素</h3>
+            
+            <div class="implementation-grid">
+                <div class="implementation-item">
+                    <h4>计算效率</h4>
+                    <ul>
+                        <li>乘法器数量</li>
+                        <li>加法器数量</li>
+                        <li>延迟单元数量</li>
+                        <li>关键路径长度</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-item">
+                    <h4>存储需求</h4>
+                    <ul>
+                        <li>系数存储</li>
+                        <li>数据缓存</li>
+                        <li>中间变量</li>
+                        <li>量化字长</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-item">
+                    <h4>数值特性</h4>
+                    <ul>
+                        <li>舍入误差</li>
+                        <li>系数量化</li>
+                        <li>极点敏感性</li>
+                        <li>溢出处理</li>
+                    </ul>
+                </div>
+                
+                <div class="implementation-item">
+                    <h4>硬件实现</h4>
+                    <ul>
+                        <li>并行度</li>
+                        <li>流水线</li>
+                        <li>资源共享</li>
+                        <li>功耗优化</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>信号流图绘制演示</h3>
+            <canvas id="signalFlowDemo" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>滤波器类型：</label>
+                <select id="filterTypeDemo">
+                    <option value="fir">FIR滤波器</option>
+                    <option value="iir">IIR滤波器</option>
+                </select>
+                <label>结构形式：</label>
+                <select id="structureTypeDemo">
+                    <option value="direct1">直接形式I</option>
+                    <option value="direct2">直接形式II</option>
+                    <option value="cascade">级联形式</option>
+                </select>
+                <label>阶数/长度：</label>
+                <input type="range" id="orderDemo" min="2" max="6" step="1" value="3">
+                <span id="orderDemoValue">3</span>
+                <button onclick="updateSignalFlow()">更新结构图</button>
+            </div>
+        </div>
+        
+        <h2>2. IIR数字滤波器的结构</h2>
+        
+        <div class="iir-box">
+            <h3>🟣 基本传递函数形式</h3>
+            <p>IIR滤波器的系统函数一般形式：</p>
+            <div class="formula">
+                H(z) = (∑(k=0 to M) b_k z^{-k}) / (∑(k=0 to N) a_k z^{-k}) = Y(z)/X(z)
+            </div>
+            <p>对应的差分方程：</p>
+            <div class="formula">
+                y[n] = ∑(k=0 to M) b_k x[n-k] - ∑(k=1 to N) a_k y[n-k]
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>2.1 直接形式I (Direct Form I)</h3>
+            
+            <div class="structure-comparison">
+                <h4>结构特点</h4>
+                <ul>
+                    <li><strong>分离实现</strong>：分子多项式和分母多项式分别实现</li>
+                    <li><strong>两个延迟链</strong>：输入延迟链和输出延迟链</li>
+                    <li><strong>延迟单元数</strong>：M + N 个</li>
+                    <li><strong>乘法器数</strong>：M + N + 1 个</li>
+                </ul>
+                
+                <div class="advantages-disadvantages">
+                    <div class="advantages">
+                        <h5>✅ 优点</h5>
+                        <ul>
+                            <li>结构简单，容易理解</li>
+                            <li>系数与传递函数直接对应</li>
+                            <li>便于级联和并联</li>
+                            <li>数值稳定性较好</li>
+                        </ul>
+                    </div>
+                    <div class="disadvantages">
+                        <h5>❌ 缺点</h5>
+                        <ul>
+                            <li>延迟单元数量多</li>
+                            <li>不是最小延迟结构</li>
+                            <li>硬件资源消耗大</li>
+                            <li>系数量化敏感</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>2.2 直接形式II (Direct Form II)</h3>
+            
+            <div class="structure-comparison">
+                <h4>结构特点</h4>
+                <ul>
+                    <li><strong>共享延迟链</strong>：只有一个延迟链</li>
+                    <li><strong>最小延迟结构</strong>：延迟单元数 = max(M, N)</li>
+                    <li><strong>规范形式</strong>：也称为典型直接形式</li>
+                    <li><strong>中间变量</strong>：w[n] = x[n] - ∑a_k w[n-k]</li>
+                </ul>
+                
+                <div class="formula">
+                    w[n] = x[n] - ∑(k=1 to N) a_k w[n-k]<br>
+                    y[n] = ∑(k=0 to M) b_k w[n-k]
+                </div>
+                
+                <div class="advantages-disadvantages">
+                    <div class="advantages">
+                        <h5>✅ 优点</h5>
+                        <ul>
+                            <li>最少延迟单元</li>
+                            <li>存储需求最小</li>
+                            <li>硬件实现高效</li>
+                            <li>适合级联实现</li>
+                        </ul>
+                    </div>
+                    <div class="disadvantages">
+                        <h5>❌ 缺点</h5>
+                        <ul>
+                            <li>中间节点可能溢出</li>
+                            <li>量化噪声累积</li>
+                            <li>对系数量化敏感</li>
+                            <li>调试相对困难</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>2.3 级联形式 (Cascade Form)</h3>
+            
+            <p>将高阶传递函数分解为<strong>二阶子系统的级联</strong>：</p>
+            
+            <div class="formula">
+                H(z) = H_0 ∏(k=1 to K) H_k(z) = H_0 ∏(k=1 to K) (b_{0k} + b_{1k}z^{-1} + b_{2k}z^{-2})/(1 + a_{1k}z^{-1} + a_{2k}z^{-2})
+            </div>
+            
+            <div class="structure-comparison">
+                <h4>设计考虑</h4>
+                <ul>
+                    <li><strong>极零配对</strong>：相近的极点和零点配对</li>
+                    <li><strong>增益分配</strong>：避免中间节点溢出</li>
+                    <li><strong>级联次序</strong>：影响量化噪声和动态范围</li>
+                    <li><strong>二阶节数</strong>：K = ⌈N/2⌉</li>
+                </ul>
+                
+                <div class="advantages-disadvantages">
+                    <div class="advantages">
+                        <h5>✅ 优点</h5>
+                        <ul>
+                            <li>量化效应小</li>
+                            <li>极点控制精确</li>
+                            <li>模块化设计</li>
+                            <li>便于优化配对</li>
+                        </ul>
+                    </div>
+                    <div class="disadvantages">
+                        <h5>❌ 缺点</h5>
+                        <ul>
+                            <li>结构复杂</li>
+                            <li>计算量略增</li>
+                            <li>配对需要优化</li>
+                            <li>级联次序敏感</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>2.4 并联形式 (Parallel Form)</h3>
+            
+            <p>使用<strong>部分分式分解</strong>将传递函数表示为一阶和二阶子系统的并联：</p>
+            
+            <div class="formula">
+                H(z) = C + ∑(k=1 to K1) A_k/(1 - p_k z^{-1}) + ∑(k=1 to K2) (B_{0k} + B_{1k}z^{-1})/(1 + a_{1k}z^{-1} + a_{2k}z^{-2})
+            </div>
+            
+            <div class="structure-comparison">
+                <h4>特点分析</h4>
+                <ul>
+                    <li><strong>并行计算</strong>：各支路可同时计算</li>
+                    <li><strong>误差独立</strong>：各支路量化误差相互独立</li>
+                    <li><strong>稳定性好</strong>：单个极点控制</li>
+                    <li><strong>适合流水线</strong>：硬件并行实现友好</li>
+                </ul>
+                
+                <div class="advantages-disadvantages">
+                    <div class="advantages">
+                        <h5>✅ 优点</h5>
+                        <ul>
+                            <li>计算可并行</li>
+                            <li>量化噪声小</li>
+                            <li>稳定性最好</li>
+                            <li>适合VLSI实现</li>
+                        </ul>
+                    </div>
+                    <div class="disadvantages">
+                        <h5>❌ 缺点</h5>
+                        <ul>
+                            <li>加法器数量多</li>
+                            <li>部分分式分解复杂</li>
+                            <li>系数精度要求高</li>
+                            <li>零点实现复杂</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>IIR滤波器结构对比演示</h3>
+            <canvas id="iirStructureDemo" width="800" height="500"></canvas>
+            <div class="controls">
+                <label>IIR结构类型：</label>
+                <select id="iirStructureType">
+                    <option value="direct1">直接形式I</option>
+                    <option value="direct2">直接形式II</option>
+                    <option value="cascade">级联形式</option>
+                    <option value="parallel">并联形式</option>
+                </select>
+                <label>滤波器阶数：</label>
+                <input type="range" id="iirOrder" min="2" max="6" step="1" value="4">
+                <span id="iirOrderValue">4</span>
+                <label>量化字长：</label>
+                <input type="range" id="wordLength" min="8" max="16" step="1" value="12">
+                <span id="wordLengthValue">12</span> bits
+                <button onclick="updateIIRStructure()">更新结构分析</button>
+            </div>
+            <div id="iirAnalysisResult" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <h2>3. FIR数字滤波器的结构</h2>
+        
+        <div class="fir-box">
+            <h3>🔵 基本传递函数形式</h3>
+            <p>FIR滤波器的系统函数：</p>
+            <div class="formula">
+                H(z) = ∑(k=0 to N-1) h[k] z^{-k}
+            </div>
+            <p>对应的差分方程：</p>
+            <div class="formula">
+                y[n] = ∑(k=0 to N-1) h[k] x[n-k]
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>3.1 直接形式 (Direct Form)</h3>
+            
+            <div class="structure-comparison">
+                <h4>结构特点</h4>
+                <ul>
+                    <li><strong>横截滤波器</strong>：也称为抽头延迟线结构</li>
+                    <li><strong>延迟单元数</strong>：N-1 个</li>
+                    <li><strong>乘法器数</strong>：N 个</li>
+                    <li><strong>加法器数</strong>：N-1 个</li>
+                </ul>
+                
+                <div class="advantages-disadvantages">
+                    <div class="advantages">
+                        <h5>✅ 优点</h5>
+                        <ul>
+                            <li>结构简单直观</li>
+                            <li>总是稳定</li>
+                            <li>易于实现和调试</li>
+                            <li>适合并行计算</li>
+                        </ul>
+                    </div>
+                    <div class="disadvantages">
+                        <h5>❌ 缺点</h5>
+                        <ul>
+                            <li>计算量大</li>
+                            <li>未利用对称性</li>
+                            <li>硬件资源消耗多</li>
+                            <li>实时性要求高</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>3.2 线性相位结构</h3>
+            
+            <p>利用线性相位FIR滤波器的<strong>对称性</strong>减少计算量：</p>
+            
+            <div class="structure-types">
+                <div class="structure-item">
+                    <h4>第一类线性相位</h4>
+                    <p><strong>N为奇数，偶对称</strong></p>
+                    <div class="formula">h[n] = h[N-1-n]</div>
+                    <ul>
+                        <li>乘法器数：(N+1)/2</li>
+                        <li>中心点独立</li>
+                        <li>适合所有滤波器类型</li>
+                    </ul>
+                </div>
+                
+                <div class="structure-item">
+                    <h4>第二类线性相位</h4>
+                    <p><strong>N为偶数，偶对称</strong></p>
+                    <div class="formula">h[n] = h[N-1-n]</div>
+                    <ul>
+                        <li>乘法器数：N/2</li>
+                        <li>无独立中心点</li>
+                        <li>不适合高通滤波器</li>
+                    </ul>
+                </div>
+                
+                <div class="structure-item">
+                    <h4>第三类线性相位</h4>
+                    <p><strong>N为奇数，奇对称</strong></p>
+                    <div class="formula">h[n] = -h[N-1-n]</div>
+                    <ul>
+                        <li>乘法器数：(N-1)/2</li>
+                        <li>中心点为0</li>
+                        <li>适合微分器、Hilbert变换</li>
+                    </ul>
+                </div>
+                
+                <div class="structure-item">
+                    <h4>第四类线性相位</h4>
+                    <p><strong>N为偶数，奇对称</strong></p>
+                    <div class="formula">h[n] = -h[N-1-n]</div>
+                    <ul>
+                        <li>乘法器数：N/2</li>
+                        <li>无独立中心点</li>
+                        <li>适合微分器</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>3.3 级联形式</h3>
+            
+            <p>将长FIR滤波器分解为<strong>短FIR滤波器的级联</strong>：</p>
+            
+            <div class="formula">
+                H(z) = ∏(k=1 to K) H_k(z)
+            </div>
+            
+            <div class="structure-comparison">
+                <h4>分解策略</h4>
+                <ul>
+                    <li><strong>等长分解</strong>：每个子滤波器长度相等</li>
+                    <li><strong>频率分解</strong>：按频带特性分解</li>
+                    <li><strong>最优分解</strong>：最小化总乘法器数</li>
+                    <li><strong>模块化设计</strong>：便于硬件实现</li>
+                </ul>
+                
+                <div class="advantages-disadvantages">
+                    <div class="advantages">
+                        <h5>✅ 优点</h5>
+                        <ul>
+                            <li>计算量可能减少</li>
+                            <li>便于模块化设计</li>
+                            <li>可利用快速算法</li>
+                            <li>便于流水线实现</li>
+                        </ul>
+                    </div>
+                    <div class="disadvantages">
+                        <h5>❌ 缺点</h5>
+                        <ul>
+                            <li>设计复杂</li>
+                            <li>可能增加延迟</li>
+                            <li>分解不唯一</li>
+                            <li>优化困难</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>3.4 多相结构 (Polyphase Structure)</h3>
+            
+            <p>将FIR滤波器分解为<strong>多个子滤波器的多相形式</strong>，特别适用于<strong>多率信号处理</strong>：</p>
+            
+            <div class="formula">
+                H(z) = ∑(k=0 to M-1) z^{-k} E_k(z^M)
+            </div>
+            
+            <div class="structure-comparison">
+                <h4>多相分解</h4>
+                <ul>
+                    <li><strong>M相分解</strong>：h[n] 按 n mod M 分组</li>
+                    <li><strong>降采样友好</strong>：自然适应多率处理</li>
+                    <li><strong>计算效率</strong>：在低采样率上计算</li>
+                    <li><strong>硬件优化</strong>：减少运算时钟频率</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="lattice-box">
+            <h3>3.5 格型结构 (Lattice Structure)</h3>
+            
+            <p>格型结构是一种<strong>特殊的递归结构</strong>，具有优良的数值特性：</p>
+            
+            <div class="formula">
+                f_m[n] = f_{m-1}[n] + k_m g_{m-1}[n-1]<br>
+                g_m[n] = g_{m-1}[n-1] + k_m f_{m-1}[n]
+            </div>
+            
+            <div class="advantages-disadvantages">
+                <div class="advantages">
+                    <h5>✅ 优点</h5>
+                    <ul>
+                        <li>数值稳定性好</li>
+                        <li>系数量化不敏感</li>
+                        <li>模块化结构</li>
+                        <li>适合自适应滤波</li>
+                        <li>反射系数有界</li>
+                    </ul>
+                </div>
+                <div class="disadvantages">
+                    <h5>❌ 缺点</h5>
+                    <ul>
+                        <li>计算量大</li>
+                        <li>延迟增加</li>
+                        <li>结构复杂</li>
+                        <li>系数设计复杂</li>
+                        <li>不适合所有FIR</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>FIR滤波器结构对比演示</h3>
+            <canvas id="firStructureDemo" width="800" height="500"></canvas>
+            <div class="controls">
+                <label>FIR结构类型：</label>
+                <select id="firStructureType">
+                    <option value="direct">直接形式</option>
+                    <option value="linear_phase">线性相位形式</option>
+                    <option value="cascade">级联形式</option>
+                    <option value="polyphase">多相形式</option>
+                </select>
+                <label>滤波器长度：</label>
+                <input type="range" id="firLength" min="8" max="32" step="4" value="16">
+                <span id="firLengthValue">16</span>
+                <label>线性相位类型：</label>
+                <select id="linearPhaseType">
+                    <option value="type1">第一类(N奇,偶对称)</option>
+                    <option value="type2">第二类(N偶,偶对称)</option>
+                    <option value="type3">第三类(N奇,奇对称)</option>
+                    <option value="type4">第四类(N偶,奇对称)</option>
+                </select>
+                <button onclick="updateFIRStructure()">更新结构分析</button>
+            </div>
+            <div id="firAnalysisResult" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>滤波器结构性能对比</h3>
+            <canvas id="performanceComparison" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>对比维度：</label>
+                <select id="comparisonMetric">
+                    <option value="multipliers">乘法器数量</option>
+                    <option value="memory">存储需求</option>
+                    <option value="quantization">量化敏感性</option>
+                    <option value="complexity">实现复杂度</option>
+                </select>
+                <label>滤波器阶数/长度：</label>
+                <input type="range" id="filterSize" min="4" max="20" step="2" value="10">
+                <span id="filterSizeValue">10</span>
+                <button onclick="updatePerformanceComparison()">更新对比</button>
+            </div>
+        </div>
+        
+        <h2>量化效应与实现考虑</h2>
+        
+        <div class="quantization-effects">
+            <h3>⚠️ 有限字长效应</h3>
+            
+            <div class="structure-comparison">
+                <h4>量化误差来源</h4>
+                <ul>
+                    <li><strong>系数量化</strong>：滤波器系数的有限精度表示</li>
+                    <li><strong>输入量化</strong>：A/D转换的量化误差</li>
+                    <li><strong>运算量化</strong>：乘法和加法运算的舍入误差</li>
+                    <li><strong>溢出效应</strong>：运算结果超出表示范围</li>
+                </ul>
+                
+                <h4>不同结构的敏感性</h4>
+                <table>
+                    <tr>
+                        <th>结构类型</th>
+                        <th>系数量化敏感性</th>
+                        <th>舍入误差累积</th>
+                        <th>极点位置稳定性</th>
+                        <th>推荐应用</th>
+                    </tr>
+                    <tr>
+                        <td><strong>直接形式I</strong></td>
+                        <td>中等</td>
+                        <td>较小</td>
+                        <td>中等</td>
+                        <td>低阶滤波器</td>
+                    </tr>
+                    <tr>
+                        <td><strong>直接形式II</strong></td>
+                        <td>较高</td>
+                        <td>较大</td>
+                        <td>较差</td>
+                        <td>高效实现</td>
+                    </tr>
+                    <tr>
+                        <td><strong>级联形式</strong></td>
+                        <td>较小</td>
+                        <td>小</td>
+                        <td>好</td>
+                        <td>高阶IIR滤波器</td>
+                    </tr>
+                    <tr>
+                        <td><strong>并联形式</strong></td>
+                        <td>最小</td>
+                        <td>最小</td>
+                        <td>最好</td>
+                        <td>高精度要求</td>
+                    </tr>
+                    <tr>
+                        <td><strong>格型结构</strong></td>
+                        <td>最小</td>
+                        <td>小</td>
+                        <td>最好</td>
+                        <td>自适应滤波</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：结构分析</h4>
+            <p>给定3阶IIR滤波器：H(z) = (1 + 2z⁻¹ + z⁻²)/(1 - 0.5z⁻¹ + 0.25z⁻²)</p>
+            <ol>
+                <li>画出直接形式I和直接形式II的信号流图</li>
+                <li>比较两种结构的延迟单元数和乘法器数</li>
+                <li>写出对应的差分方程</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                1. 直接形式I：两个延迟链，输入链2个延迟，输出链2个延迟<br>
+                   直接形式II：一个延迟链，共享2个延迟单元<br>
+                2. 直接形式I：延迟单元4个，乘法器5个<br>
+                   直接形式II：延迟单元2个，乘法器5个<br>
+                3. 直接形式II差分方程：<br>
+                   w[n] = x[n] + 0.5w[n-1] - 0.25w[n-2]<br>
+                   y[n] = w[n] + 2w[n-1] + w[n-2]
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：线性相位结构</h4>
+            <p>设计一个15阶线性相位FIR低通滤波器，冲激响应h[n]具有偶对称性。</p>
+            <ol>
+                <li>确定线性相位类型</li>
+                <li>利用对称性简化结构</li>
+                <li>计算所需的乘法器数量</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                1. 第一类线性相位（N=15为奇数，偶对称）<br>
+                2. 利用h[n] = h[14-n]，只需存储8个独立系数<br>
+                3. 乘法器数量：(15+1)/2 = 8个（中心系数h[7]独立）<br>
+                4. 结构：将对称的输入样本先相加，再与系数相乘
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：级联与并联形式</h4>
+            <p>将IIR滤波器H(z) = 1/((1-0.5z⁻¹)(1+0.3z⁻¹+0.2z⁻²))分别用级联和并联形式实现。</p>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                <strong>级联形式：</strong><br>
+                H(z) = H₁(z) × H₂(z) = 1/(1-0.5z⁻¹) × 1/(1+0.3z⁻¹+0.2z⁻²)<br>
+                两个子系统级联实现<br><br>
+                <strong>并联形式：</strong><br>
+                使用部分分式分解：<br>
+                H(z) = A/(1-0.5z⁻¹) + (B₀+B₁z⁻¹)/(1+0.3z⁻¹+0.2z⁻²)<br>
+                通过留数定理计算系数A, B₀, B₁
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：量化效应分析</h4>
+            <p>比较直接形式II和级联形式实现6阶巴特沃思低通滤波器时的量化敏感性。</p>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                <strong>直接形式II：</strong><br>
+                - 6个极点系数，量化误差直接影响所有极点<br>
+                - 高阶分母多项式对系数变化敏感<br>
+                - 可能导致极点移出单位圆<br><br>
+                <strong>级联形式：</strong><br>
+                - 分解为3个二阶节，每节2个极点<br>
+                - 各节系数量化相互独立<br>
+                - 二阶节的极点位置对系数变化不敏感<br>
+                - 推荐用于高阶IIR滤波器
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习5：结构选择</h4>
+            <p>对于以下应用场景，选择最合适的滤波器结构：</p>
+            <ol>
+                <li>低功耗嵌入式音频处理器中的3阶高通滤波器</li>
+                <li>高精度仪器中的10阶抗混叠滤波器</li>
+                <li>通信系统中的64阶FIR匹配滤波器</li>
+                <li>自适应噪声消除系统中的可变系数滤波器</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer5')">显示答案</button>
+            <div id="answer5" class="answer">
+                <strong>答案：</strong><br>
+                1. <strong>直接形式II</strong> - 低阶IIR，最少延迟单元，适合低功耗<br>
+                2. <strong>级联形式</strong> - 高阶IIR，量化敏感性小，精度高<br>
+                3. <strong>线性相位结构</strong> - 利用对称性减少一半乘法器<br>
+                4. <strong>格型结构</strong> - 系数更新稳定，适合自适应算法
+            </div>
+        </div>
+        
+        <h2>学习要点总结</h2>
+        
+        <div class="important">
+            <h3>🎯 核心掌握要点</h3>
+            <ol>
+                <li><strong>结构分类</strong>：掌握各种滤波器结构的特点和适用场景</li>
+                <li><strong>计算复杂度</strong>：分析乘法器、加法器、延迟单元的数量</li>
+                <li><strong>量化效应</strong>：理解不同结构对有限字长的敏感性</li>
+                <li><strong>实现权衡</strong>：在性能、复杂度、稳定性间做出平衡</li>
+                <li><strong>线性相位</strong>：利用FIR对称性优化结构</li>
+                <li><strong>级联与并联</strong>：高阶滤波器的模块化实现方法</li>
+            </ol>
+        </div>
+        
+        <div class="structure-box">
+            <h3>🔗 结构选择指南</h3>
+            <ul>
+                <li><strong>低阶IIR</strong>：直接形式II，计算效率高</li>
+                <li><strong>高阶IIR</strong>：级联形式，量化敏感性小</li>
+                <li><strong>高精度要求</strong>：并联形式或格型结构</li>
+                <li><strong>FIR滤波器</strong>：优先考虑线性相位结构</li>
+                <li><strong>实时系统</strong>：关注延迟和计算复杂度</li>
+                <li><strong>自适应系统</strong>：选择系数更新稳定的结构</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 更新信号流图演示
+        function updateSignalFlow() {
+            const canvas = document.getElementById('signalFlowDemo');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const filterType = document.getElementById('filterTypeDemo').value;
+            const structureType = document.getElementById('structureTypeDemo').value;
+            const order = parseInt(document.getElementById('orderDemo').value);
+            
+            document.getElementById('orderDemoValue').textContent = order;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawSignalFlowGraph(ctx, width, height, filterType, structureType, order);
+        }
+        
+        function drawSignalFlowGraph(ctx, width, height, filterType, structureType, order) {
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            if (filterType === 'fir') {
+                drawFIRSignalFlow(ctx, width, height, structureType, order);
+            } else {
+                drawIIRSignalFlow(ctx, width, height, structureType, order);
+            }
+        }
+        
+        function drawFIRSignalFlow(ctx, width, height, structureType, order) {
+            const nodeSize = 30;
+            const spacing = 80;
+            const startX = 50;
+            const centerY = height / 2;
+            
+            // 标题
+            ctx.fillStyle = '#2196f3';
+            ctx.font = '16px Arial';
+            ctx.fillText(`FIR滤波器 - ${getStructureName(structureType)} (长度=${order+1})`, width/2, 30);
+            
+            if (structureType === 'direct1') {
+                // 直接形式：横截滤波器结构
+                
+                // 输入
+                ctx.fillStyle = '#4caf50';
+                ctx.fillRect(startX - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'white';
+                ctx.fillText('x[n]', startX, centerY + 5);
+                
+                // 延迟链和系数
+                for (let i = 0; i <= order; i++) {
+                    const x = startX + (i + 1) * spacing;
+                    
+                    if (i < order) {
+                        // 延迟单元
+                        ctx.fillStyle = '#ffeb3b';
+                        ctx.fillRect(x - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+                        ctx.fillStyle = 'black';
+                        ctx.fillText('z⁻¹', x, centerY + 5);
+                        
+                        // 连接线
+                        ctx.strokeStyle = '#333';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(x - spacing + nodeSize/2, centerY);
+                        ctx.lineTo(x - nodeSize/2, centerY);
+                        ctx.stroke();
+                    }
+                    
+                    // 系数乘法器
+                    const coeffY = centerY - 80;
+                    ctx.fillStyle = '#2196f3';
+                    ctx.fillRect(x - nodeSize/2, coeffY - nodeSize/2, nodeSize, nodeSize);
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(`h[${i}]`, x, coeffY + 5);
+                    
+                    // 连接到延迟链
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY - nodeSize/2);
+                    ctx.lineTo(x, coeffY + nodeSize/2);
+                    ctx.stroke();
+                    
+                    // 分支点
+                    ctx.fillStyle = '#333';
+                    ctx.beginPath();
+                    ctx.arc(x, centerY, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+                
+                // 加法器
+                const outputY = centerY + 80;
+                for (let i = 0; i <= order; i++) {
+                    const x = startX + (i + 1) * spacing;
+                    const coeffY = centerY - 80;
+                    
+                    // 连接到加法器
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(x, coeffY - nodeSize/2);
+                    ctx.lineTo(x, outputY - 20);
+                    ctx.stroke();
+                }
+                
+                // 输出加法器
+                const outputX = startX + (order + 2) * spacing;
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(startX + spacing, outputY - 20);
+                ctx.lineTo(outputX - 50, outputY - 20);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#4caf50';
+                ctx.beginPath();
+                ctx.arc(outputX - 50, outputY - 20, 15, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.fillText('+', outputX - 50, outputY - 15);
+                
+                // 输出
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(outputX - nodeSize/2, outputY - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'white';
+                ctx.fillText('y[n]', outputX, outputY + 5);
+                
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(outputX - 50 + 15, outputY - 20);
+                ctx.lineTo(outputX - nodeSize/2, outputY);
+                ctx.stroke();
+            }
+        }
+        
+        function drawIIRSignalFlow(ctx, width, height, structureType, order) {
+            const nodeSize = 30;
+            const spacing = 80;
+            const startX = 50;
+            const centerY = height / 2;
+            
+            // 标题
+            ctx.fillStyle = '#9c27b0';
+            ctx.font = '16px Arial';
+            ctx.fillText(`IIR滤波器 - ${getStructureName(structureType)} (阶数=${order})`, width/2, 30);
+            
+            if (structureType === 'direct1') {
+                drawIIRDirect1(ctx, width, height, order, startX, centerY, nodeSize, spacing);
+            } else if (structureType === 'direct2') {
+                drawIIRDirect2(ctx, width, height, order, startX, centerY, nodeSize, spacing);
+            } else if (structureType === 'cascade') {
+                drawIIRCascade(ctx, width, height, order, startX, centerY, nodeSize, spacing);
+            }
+        }
+        
+        function drawIIRDirect1(ctx, width, height, order, startX, centerY, nodeSize, spacing) {
+            // 简化的直接形式I结构
+            
+            // 输入
+            ctx.fillStyle = '#4caf50';
+            ctx.fillRect(startX - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+            ctx.fillStyle = 'white';
+            ctx.fillText('x[n]', startX, centerY + 5);
+            
+            // 分子部分（前向路径）
+            const forwardY = centerY - 60;
+            for (let i = 0; i <= order; i++) {
+                const x = startX + (i + 1) * spacing;
+                
+                if (i > 0) {
+                    // 延迟单元
+                    ctx.fillStyle = '#ffeb3b';
+                    ctx.fillRect(x - nodeSize/2, forwardY - nodeSize/2, nodeSize, nodeSize);
+                    ctx.fillStyle = 'black';
+                    ctx.fillText('z⁻¹', x, forwardY + 5);
+                }
+                
+                // 系数乘法器
+                ctx.fillStyle = '#2196f3';
+                ctx.fillRect(x - nodeSize/2, forwardY - 60 - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'white';
+                ctx.fillText(`b${i}`, x, forwardY - 60 + 5);
+            }
+            
+            // 分母部分（反馈路径）
+            const feedbackY = centerY + 60;
+            for (let i = 1; i <= order; i++) {
+                const x = startX + (i + 1) * spacing;
+                
+                // 延迟单元
+                ctx.fillStyle = '#ffeb3b';
+                ctx.fillRect(x - nodeSize/2, feedbackY - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'black';
+                ctx.fillText('z⁻¹', x, feedbackY + 5);
+                
+                // 系数乘法器
+                ctx.fillStyle = '#f44336';
+                ctx.fillRect(x - nodeSize/2, feedbackY + 60 - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'white';
+                ctx.fillText(`-a${i}`, x, feedbackY + 60 + 5);
+            }
+            
+            // 输出加法器
+            const outputX = startX + (order + 2) * spacing;
+            ctx.fillStyle = '#4caf50';
+            ctx.beginPath();
+            ctx.arc(outputX, centerY, 20, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.fillText('+', outputX, centerY + 5);
+            
+            // 输出
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(outputX + 40 - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+            ctx.fillStyle = 'white';
+            ctx.fillText('y[n]', outputX + 40, centerY + 5);
+        }
+        
+        function drawIIRDirect2(ctx, width, height, order, startX, centerY, nodeSize, spacing) {
+            // 简化的直接形式II结构
+            
+            // 输入
+            ctx.fillStyle = '#4caf50';
+            ctx.fillRect(startX - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+            ctx.fillStyle = 'white';
+            ctx.fillText('x[n]', startX, centerY + 5);
+            
+            // 第一个加法器（分母部分）
+            const firstAdderX = startX + spacing;
+            ctx.fillStyle = '#4caf50';
+            ctx.beginPath();
+            ctx.arc(firstAdderX, centerY, 15, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.fillText('+', firstAdderX, centerY + 5);
+            
+            // 共享延迟链
+            for (let i = 1; i <= order; i++) {
+                const x = firstAdderX + i * spacing;
+                
+                // 延迟单元
+                ctx.fillStyle = '#ffeb3b';
+                ctx.fillRect(x - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'black';
+                ctx.fillText('z⁻¹', x, centerY + 5);
+                
+                // 反馈系数
+                ctx.fillStyle = '#f44336';
+                ctx.fillRect(x - nodeSize/2, centerY + 60 - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'white';
+                ctx.fillText(`-a${i}`, x, centerY + 60 + 5);
+                
+                // 前馈系数
+                ctx.fillStyle = '#2196f3';
+                ctx.fillRect(x - nodeSize/2, centerY - 60 - nodeSize/2, nodeSize, nodeSize);
+                ctx.fillStyle = 'white';
+                ctx.fillText(`b${i}`, x, centerY - 60 + 5);
+            }
+            
+            // b0系数
+            ctx.fillStyle = '#2196f3';
+            ctx.fillRect(firstAdderX - nodeSize/2, centerY - 60 - nodeSize/2, nodeSize, nodeSize);
+            ctx.fillStyle = 'white';
+            ctx.fillText('b0', firstAdderX, centerY - 60 + 5);
+            
+            // 输出加法器
+            const outputAdderX = firstAdderX + (order + 1) * spacing;
+            ctx.fillStyle = '#4caf50';
+            ctx.beginPath();
+            ctx.arc(outputAdderX, centerY, 15, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.fillText('+', outputAdderX, centerY + 5);
+            
+            // 输出
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(outputAdderX + 40 - nodeSize/2, centerY - nodeSize/2, nodeSize, nodeSize);
+            ctx.fillStyle = 'white';
+            ctx.fillText('y[n]', outputAdderX + 40, centerY + 5);
+        }
+        
+        function drawIIRCascade(ctx, width, height, order, startX, centerY, nodeSize, spacing) {
+            // 级联形式：二阶节的级联
+            const numSections = Math.ceil(order / 2);
+            const sectionWidth = 150;
+            
+            for (let section = 0; section < numSections; section++) {
+                const sectionX = startX + section * (sectionWidth + 50);
+                
+                // 二阶节框架
+                ctx.strokeStyle = '#9c27b0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(sectionX, centerY - 40, sectionWidth, 80);
+                
+                // 节标签
+                ctx.fillStyle = '#9c27b0';
+                ctx.font = '12px Arial';
+                ctx.fillText(`H${section + 1}(z)`, sectionX + sectionWidth/2, centerY - 50);
+                
+                // 二阶节内部结构（简化）
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Arial';
+                ctx.fillText('二阶', sectionX + sectionWidth/2, centerY - 10);
+                ctx.fillText('直接形式II', sectionX + sectionWidth/2, centerY + 5);
+                
+                // 连接线
+                if (section < numSections - 1) {
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(sectionX + sectionWidth, centerY);
+                    ctx.lineTo(sectionX + sectionWidth + 50, centerY);
+                    ctx.stroke();
+                }
+            }
+            
+            // 输入输出标记
+            ctx.fillStyle = '#4caf50';
+            ctx.font = '14px Arial';
+            ctx.fillText('x[n]', startX - 30, centerY + 5);
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillText('y[n]', startX + numSections * (sectionWidth + 50) - 20, centerY + 5);
+        }
+        
+        function getStructureName(type) {
+            const names = {
+                'direct1': '直接形式I',
+                'direct2': '直接形式II',
+                'cascade': '级联形式',
+                'parallel': '并联形式'
+            };
+            return names[type] || type;
+        }
+        
+        // 更新IIR结构演示
+        function updateIIRStructure() {
+            const canvas = document.getElementById('iirStructureDemo');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const structureType = document.getElementById('iirStructureType').value;
+            const order = parseInt(document.getElementById('iirOrder').value);
+            const wordLength = parseInt(document.getElementById('wordLength').value);
+            
+            document.getElementById('iirOrderValue').textContent = order;
+            document.getElementById('wordLengthValue').textContent = wordLength;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawIIRStructureAnalysis(ctx, width, height, structureType, order);
+            updateIIRAnalysisResult(structureType, order, wordLength);
+        }
+        
+        function drawIIRStructureAnalysis(ctx, width, height, structureType, order) {
+            // 绘制结构特性分析图
+            const barHeight = 40;
+            const barSpacing = 60;
+            const startY = 50;
+            const maxWidth = width - 200;
+            
+            // 标题
+            ctx.fillStyle = '#9c27b0';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`IIR滤波器结构分析 - ${getStructureName(structureType)}`, width/2, 25);
+            
+            // 计算各项指标
+            const metrics = calculateIIRMetrics(structureType, order);
+            const labels = ['延迟单元', '乘法器', '加法器', '量化敏感性', '实现复杂度'];
+            const colors = ['#ffeb3b', '#2196f3', '#4caf50', '#ff9800', '#e74c3c'];
+            
+            ctx.textAlign = 'left';
+            ctx.font = '12px Arial';
+            
+            for (let i = 0; i < metrics.length; i++) {
+                const y = startY + i * barSpacing;
+                const barWidth = (metrics[i] / Math.max(...metrics)) * maxWidth;
+                
+                // 标签
+                ctx.fillStyle = '#333';
+                ctx.fillText(labels[i], 20, y + barHeight/2 + 5);
+                
+                // 柱状图
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(120, y, barWidth, barHeight);
+                
+                // 数值
+                ctx.fillStyle = '#333';
+                ctx.fillText(metrics[i].toString(), 130 + barWidth, y + barHeight/2 + 5);
+            }
+        }
+        
+        function calculateIIRMetrics(structureType, order) {
+            switch (structureType) {
+                case 'direct1':
+                    return [order * 2, order * 2 + 1, order * 2, 6, 3]; // 延迟，乘法，加法，量化敏感性，复杂度
+                case 'direct2':
+                    return [order, order * 2 + 1, order * 2, 8, 4];
+                case 'cascade':
+                    const sections = Math.ceil(order / 2);
+                    return [sections * 2, sections * 5, sections * 4, 3, 6];
+                case 'parallel':
+                    return [sections * 2, sections * 3, order + 1, 2, 7];
+                default:
+                    return [0, 0, 0, 0, 0];
+            }
+        }
+        
+        function updateIIRAnalysisResult(structureType, order, wordLength) {
+            const resultDiv = document.getElementById('iirAnalysisResult');
+            const metrics = calculateIIRMetrics(structureType, order);
+            
+            // 量化噪声估算（简化）
+            const quantizationNoise = Math.pow(2, -wordLength) / Math.sqrt(12);
+            const scaledNoise = quantizationNoise * metrics[3]; // 乘以敏感性因子
+            
+            resultDiv.innerHTML = `
+                <h4>${getStructureName(structureType)}结构分析结果</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h5>硬件资源需求</h5>
+                        <ul>
+                            <li><strong>延迟单元：</strong>${metrics[0]} 个</li>
+                            <li><strong>乘法器：</strong>${metrics[1]} 个</li>
+                            <li><strong>加法器：</strong>${metrics[2]} 个</li>
+                            <li><strong>存储需求：</strong>${metrics[0] + metrics[1]} 单元</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>数值特性</h5>
+                        <ul>
+                            <li><strong>量化敏感性：</strong>${getQuantizationLevel(metrics[3])}</li>
+                            <li><strong>字长：</strong>${wordLength} bits</li>
+                            <li><strong>估算量化噪声：</strong>${scaledNoise.toExponential(2)}</li>
+                            <li><strong>实现复杂度：</strong>${getComplexityLevel(metrics[4])}</li>
+                        </ul>
+                    </div>
+                </div>
+                <p><strong>推荐应用：</strong>${getRecommendation(structureType, order)}</p>
+            `;
+        }
+        
+        function getQuantizationLevel(level) {
+            if (level <= 3) return '低';
+            if (level <= 6) return '中等';
+            return '高';
+        }
+        
+        function getComplexityLevel(level) {
+            if (level <= 3) return '简单';
+            if (level <= 6) return '中等';
+            return '复杂';
+        }
+        
+        function getRecommendation(structureType, order) {
+            switch (structureType) {
+                case 'direct1':
+                    return order <= 4 ? '适合低阶滤波器，结构清晰' : '高阶时考虑其他结构';
+                case 'direct2':
+                    return '存储效率高，适合资源受限的应用';
+                case 'cascade':
+                    return '高阶滤波器的首选，量化性能好';
+                case 'parallel':
+                    return '最佳数值性能，适合高精度要求';
+                default:
+                    return '根据具体需求选择';
+            }
+        }
+        
+        // 更新FIR结构演示
+        function updateFIRStructure() {
+            const canvas = document.getElementById('firStructureDemo');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const structureType = document.getElementById('firStructureType').value;
+            const length = parseInt(document.getElementById('firLength').value);
+            const linearPhaseType = document.getElementById('linearPhaseType').value;
+            
+            document.getElementById('firLengthValue').textContent = length;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawFIRStructureAnalysis(ctx, width, height, structureType, length, linearPhaseType);
+            updateFIRAnalysisResult(structureType, length, linearPhaseType);
+        }
+        
+        function drawFIRStructureAnalysis(ctx, width, height, structureType, length, linearPhaseType) {
+            // 绘制FIR结构特性分析图
+            const barHeight = 35;
+            const barSpacing = 50;
+            const startY = 50;
+            const maxWidth = width - 200;
+            
+            // 标题
+            ctx.fillStyle = '#2196f3';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`FIR滤波器结构分析 - ${getFIRStructureName(structureType)}`, width/2, 25);
+            
+            // 计算各项指标
+            const metrics = calculateFIRMetrics(structureType, length, linearPhaseType);
+            const labels = ['延迟单元', '乘法器', '加法器', '对称性利用', '并行度'];
+            const colors = ['#ffeb3b', '#2196f3', '#4caf50', '#ff9800', '#9c27b0'];
+            
+            ctx.textAlign = 'left';
+            ctx.font = '12px Arial';
+            
+            for (let i = 0; i < metrics.length; i++) {
+                const y = startY + i * barSpacing;
+                const barWidth = (metrics[i] / Math.max(...metrics)) * maxWidth;
+                
+                // 标签
+                ctx.fillStyle = '#333';
+                ctx.fillText(labels[i], 20, y + barHeight/2 + 5);
+                
+                // 柱状图
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(120, y, barWidth, barHeight);
+                
+                // 数值
+                ctx.fillStyle = '#333';
+                ctx.fillText(metrics[i].toString(), 130 + barWidth, y + barHeight/2 + 5);
+            }
+            
+            // 对称性演示
+            if (structureType === 'linear_phase') {
+                drawSymmetryDemo(ctx, width, height, length, linearPhaseType);
+            }
+        }
+        
+        function drawSymmetryDemo(ctx, width, height, length, linearPhaseType) {
+            const demoY = height - 150;
+            const nodeSize = 15;
+            const spacing = 30;
+            const startX = 50;
+            
+            ctx.fillStyle = '#2196f3';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('对称性演示', width/2, demoY - 20);
+            
+            // 绘制系数
+            for (let i = 0; i < length; i++) {
+                const x = startX + i * spacing;
+                
+                // 判断对称关系
+                let isSymmetric = false;
+                let symmetricIndex = -1;
+                
+                if (linearPhaseType === 'type1' || linearPhaseType === 'type2') {
+                    // 偶对称
+                    symmetricIndex = length - 1 - i;
+                    isSymmetric = (i !== symmetricIndex) && (i < symmetricIndex);
+                } else {
+                    // 奇对称
+                    symmetricIndex = length - 1 - i;
+                    isSymmetric = (i !== symmetricIndex) && (i < symmetricIndex);
+                }
+                
+                // 颜色编码
+                if (isSymmetric) {
+                    ctx.fillStyle = '#4caf50'; // 对称的系数
+                } else if (i === Math.floor(length / 2) && length % 2 === 1) {
+                    ctx.fillStyle = '#ff9800'; // 中心系数
+                } else {
+                    ctx.fillStyle = '#e0e0e0'; // 从属系数
+                }
+                
+                ctx.beginPath();
+                ctx.arc(x, demoY, nodeSize/2, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 系数标号
+                ctx.fillStyle = '#333';
+                ctx.font = '8px Arial';
+                ctx.fillText(`h[${i}]`, x, demoY + 20);
+            }
+            
+            // 对称性连线
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            
+            for (let i = 0; i < Math.floor(length / 2); i++) {
+                const x1 = startX + i * spacing;
+                const x2 = startX + (length - 1 - i) * spacing;
+                
+                if (x1 !== x2) {
+                    ctx.beginPath();
+                    ctx.arc(x1, demoY - 30, 3, 0, 2 * Math.PI);
+                    ctx.moveTo(x1, demoY - 30);
+                    ctx.lineTo(x2, demoY - 30);
+                    ctx.arc(x2, demoY - 30, 3, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+            }
+            
+            ctx.setLineDash([]);
+        }
+        
+        function getFIRStructureName(type) {
+            const names = {
+                'direct': '直接形式',
+                'linear_phase': '线性相位形式',
+                'cascade': '级联形式',
+                'polyphase': '多相形式'
+            };
+            return names[type] || type;
+        }
+        
+        function calculateFIRMetrics(structureType, length, linearPhaseType) {
+            switch (structureType) {
+                case 'direct':
+                    return [length - 1, length, length - 1, 0, length];
+                case 'linear_phase':
+                    const multipliers = getLinearPhaseMultipliers(length, linearPhaseType);
+                    return [length - 1, multipliers, multipliers - 1, 10, length/2];
+                case 'cascade':
+                    const sections = Math.ceil(Math.log2(length));
+                    return [length - 1, length * 0.8, length - sections, 5, sections];
+                case 'polyphase':
+                    const phases = 4; // 假设4相分解
+                    return [length - 1, length/phases, length/phases, 8, phases];
+                default:
+                    return [0, 0, 0, 0, 0];
+            }
+        }
+        
+        function getLinearPhaseMultipliers(length, type) {
+            switch (type) {
+                case 'type1': return Math.ceil(length / 2);
+                case 'type2': return length / 2;
+                case 'type3': return Math.floor(length / 2);
+                case 'type4': return length / 2;
+                default: return length;
+            }
+        }
+        
+        function updateFIRAnalysisResult(structureType, length, linearPhaseType) {
+            const resultDiv = document.getElementById('firAnalysisResult');
+            const metrics = calculateFIRMetrics(structureType, length, linearPhaseType);
+            
+            // 计算节省的资源
+            const directMultipliers = length;
+            const actualMultipliers = metrics[1];
+            const savings = ((directMultipliers - actualMultipliers) / directMultipliers * 100).toFixed(1);
+            
+            resultDiv.innerHTML = `
+                <h4>${getFIRStructureName(structureType)}结构分析结果</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h5>硬件资源需求</h5>
+                        <ul>
+                            <li><strong>滤波器长度：</strong>${length}</li>
+                            <li><strong>延迟单元：</strong>${metrics[0]} 个</li>
+                            <li><strong>乘法器：</strong>${metrics[1]} 个</li>
+                            <li><strong>加法器：</strong>${metrics[2]} 个</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>性能特点</h5>
+                        <ul>
+                            <li><strong>对称性利用：</strong>${metrics[3] > 0 ? '是' : '否'}</li>
+                            <li><strong>资源节省：</strong>${savings}%</li>
+                            <li><strong>并行度：</strong>${getParallelismLevel(metrics[4])}</li>
+                            <li><strong>线性相位：</strong>${structureType.includes('linear') ? '保证' : '不保证'}</li>
+                        </ul>
+                    </div>
+                </div>
+                <p><strong>适用场景：</strong>${getFIRRecommendation(structureType, length)}</p>
+            `;
+        }
+        
+        function getParallelismLevel(level) {
+            if (level >= 16) return '高';
+            if (level >= 8) return '中等';
+            return '低';
+        }
+        
+        function getFIRRecommendation(structureType, length) {
+            switch (structureType) {
+                case 'direct':
+                    return length <= 16 ? '短滤波器的标准实现' : '考虑使用优化结构';
+                case 'linear_phase':
+                    return '利用对称性，节省约50%的乘法器';
+                case 'cascade':
+                    return '长滤波器的模块化实现，便于优化';
+                case 'polyphase':
+                    return '多率信号处理的高效实现';
+                default:
+                    return '根据具体需求选择';
+            }
+        }
+        
+        // 更新性能对比演示
+        function updatePerformanceComparison() {
+            const canvas = document.getElementById('performanceComparison');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const metric = document.getElementById('comparisonMetric').value;
+            const filterSize = parseInt(document.getElementById('filterSize').value);
+            
+            document.getElementById('filterSizeValue').textContent = filterSize;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawPerformanceChart(ctx, width, height, metric, filterSize);
+        }
+        
+        function drawPerformanceChart(ctx, width, height, metric, filterSize) {
+            const structures = ['Direct I', 'Direct II', 'Cascade', 'Parallel', 'FIR Direct', 'FIR Linear'];
+            const colors = ['#e74c3c', '#3498db', '#9c27b0', '#ff9800', '#2196f3', '#4caf50'];
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`滤波器结构性能对比 - ${getMetricName(metric)}`, width/2, 25);
+            
+            // 计算各结构的性能数据
+            const values = structures.map(structure => 
+                calculatePerformanceMetric(structure, metric, filterSize)
+            );
+            
+            // 绘制柱状图
+            const barWidth = 80;
+            const barSpacing = 20;
+            const startX = 60;
+            const maxValue = Math.max(...values);
+            const scaleY = (height - 100) / maxValue;
+            
+            ctx.textAlign = 'center';
+            ctx.font = '12px Arial';
+            
+            for (let i = 0; i < structures.length; i++) {
+                const x = startX + i * (barWidth + barSpacing);
+                const barHeight = values[i] * scaleY;
+                const y = height - 50 - barHeight;
+                
+                // 柱状图
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                // 数值标签
+                ctx.fillStyle = '#333';
+                ctx.fillText(values[i].toString(), x + barWidth/2, y - 5);
+                
+                // 结构名称
+                ctx.save();
+                ctx.translate(x + barWidth/2, height - 30);
+                ctx.rotate(-Math.PI / 6);
+                ctx.fillText(structures[i], 0, 0);
+                ctx.restore();
+            }
+            
+            // Y轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const y = height - 50 - (maxValue * i / 5) * scaleY;
+                const value = (maxValue * i / 5).toFixed(1);
+                ctx.fillText(value, 50, y + 5);
+            }
+        }
+        
+        function getMetricName(metric) {
+            const names = {
+                'multipliers': '乘法器数量',
+                'memory': '存储需求 (单元)',
+                'quantization': '量化敏感性',
+                'complexity': '实现复杂度'
+            };
+            return names[metric] || metric;
+        }
+        
+        function calculatePerformanceMetric(structure, metric, filterSize) {
+            // 简化的性能计算
+            const metrics = {
+                'Direct I': {
+                    multipliers: filterSize * 2 + 1,
+                    memory: filterSize * 2,
+                    quantization: 6,
+                    complexity: 3
+                },
+                'Direct II': {
+                    multipliers: filterSize * 2 + 1,
+                    memory: filterSize,
+                    quantization: 8,
+                    complexity: 4
+                },
+                'Cascade': {
+                    multipliers: Math.ceil(filterSize/2) * 5,
+                    memory: Math.ceil(filterSize/2) * 2,
+                    quantization: 3,
+                    complexity: 6
+                },
+                'Parallel': {
+                    multipliers: Math.ceil(filterSize/2) * 3,
+                    memory: Math.ceil(filterSize/2) * 2,
+                    quantization: 2,
+                    complexity: 7
+                },
+                'FIR Direct': {
+                    multipliers: filterSize,
+                    memory: filterSize,
+                    quantization: 1,
+                    complexity: 2
+                },
+                'FIR Linear': {
+                    multipliers: Math.ceil(filterSize/2),
+                    memory: filterSize,
+                    quantization: 1,
+                    complexity: 3
+                }
+            };
+            
+            return metrics[structure][metric] || 0;
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            updateSignalFlow();
+            updateIIRStructure();
+            updateFIRStructure();
+            updatePerformanceComparison();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离散傅里叶变换(DFT)</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .relationship-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .property-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .property-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        
+        .property-item h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .comparison-display {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .comparison-part {
+            text-align: center;
+        }
+        
+        .sampling-demo {
+            background: #f0f8ff;
+            border: 1px solid #87ceeb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 第五章：离散傅里叶变换(DFT)</h1>
+        
+        <h2>5.1 DFT的定义式</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本定义</h3>
+            <p>对于有限长序列 x[n], n = 0, 1, ..., N-1，其<strong>离散傅里叶变换(DFT)</strong>定义为：</p>
+            
+            <h4>DFT正变换（分析公式）</h4>
+            <div class="formula">
+                X[k] = ∑<sub>n=0</sub><sup>N-1</sup> x[n]e<sup>-j2πkn/N</sup>, k = 0, 1, ..., N-1
+            </div>
+            
+            <h4>DFT逆变换（综合公式）</h4>
+            <div class="formula">
+                x[n] = (1/N) ∑<sub>k=0</sub><sup>N-1</sup> X[k]e<sup>j2πkn/N</sup>, n = 0, 1, ..., N-1
+            </div>
+            
+            <p>其中：</p>
+            <ul>
+                <li><strong>x[n]</strong>：长度为N的有限序列</li>
+                <li><strong>X[k]</strong>：DFT系数（频谱样本）</li>
+                <li><strong>W<sub>N</sub> = e<sup>-j2π/N</sup></strong>：旋转因子</li>
+            </ul>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>旋转因子表示</h3>
+            <p>引入旋转因子 W<sub>N</sub> = e<sup>-j2π/N</sup>，DFT可以简写为：</p>
+            <div class="formula">
+                X[k] = ∑<sub>n=0</sub><sup>N-1</sup> x[n]W<sub>N</sub><sup>kn</sup>
+            </div>
+            <div class="formula">
+                x[n] = (1/N) ∑<sub>k=0</sub><sup>N-1</sup> X[k]W<sub>N</sub><sup>-kn</sup>
+            </div>
+            
+            <div class="important">
+                <h4>🎯 旋转因子的重要性质</h4>
+                <ul>
+                    <li><strong>周期性</strong>：W<sub>N</sub><sup>k+N</sup> = W<sub>N</sub><sup>k</sup></li>
+                    <li><strong>对称性</strong>：W<sub>N</sub><sup>k+N/2</sup> = -W<sub>N</sub><sup>k</sup></li>
+                    <li><strong>可约性</strong>：W<sub>N</sub><sup>kr</sup> = W<sub>N/r</sub><sup>k</sup> (当r整除N时)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2>5.2 DFT与DTFT的关系</h2>
+        
+        <div class="relationship-box">
+            <h3>🔍 频率采样观点</h3>
+            <p>DFT可以理解为DTFT的<strong>频率采样</strong>：</p>
+            <div class="formula">
+                X[k] = X(e<sup>jω</sup>)|<sub>ω=2πk/N</sub>
+            </div>
+            <p>即：DFT系数X[k]是DTFT在频率ω = 2πk/N处的样本值</p>
+        </div>
+        
+        <div class="sampling-demo">
+            <h4>采样过程详解</h4>
+            <ol>
+                <li><strong>有限长序列</strong>：x[n], n = 0, 1, ..., N-1</li>
+                <li><strong>DTFT存在</strong>：X(e<sup>jω</sup>) = ∑ x[n]e<sup>-jωn</sup></li>
+                <li><strong>频率采样</strong>：在ω = 2πk/N处采样，k = 0, 1, ..., N-1</li>
+                <li><strong>得到DFT</strong>：X[k] = X(e<sup>j2πk/N</sup>)</li>
+            </ol>
+        </div>
+        
+        <div class="example">
+            <h4>关键理解</h4>
+            <ul>
+                <li><span class="highlight">DFT提供了DTFT的N个等间隔频率样本</span></li>
+                <li><span class="highlight">采样间隔为2π/N，覆盖一个周期[0, 2π)</span></li>
+                <li><span class="highlight">N个样本完全确定有限长序列（采样定理）</span></li>
+            </ul>
+        </div>
+        
+        <div class="plot-container">
+            <h3>DFT频率采样演示</h3>
+            <div class="comparison-display">
+                <div class="comparison-part">
+                    <canvas id="dtftContinuous" width="350" height="250"></canvas>
+                    <p>DTFT (连续频谱)</p>
+                </div>
+                <div class="comparison-part">
+                    <canvas id="dftSamples" width="350" height="250"></canvas>
+                    <p>DFT (频率样本)</p>
+                </div>
+            </div>
+            <div class="controls">
+                <label>序列类型：</label>
+                <select id="samplingSequence">
+                    <option value="rectangular">矩形窗</option>
+                    <option value="triangular">三角窗</option>
+                    <option value="exponential">指数序列</option>
+                    <option value="gaussian">高斯窗</option>
+                </select>
+                <label>序列长度N：</label>
+                <input type="number" id="samplingN" value="8" min="4" max="32">
+                <button onclick="plotSamplingDemo()">演示采样</button>
+            </div>
+        </div>
+        
+        <h2>5.3 DFT与DFS的关系</h2>
+        
+        <div class="knowledge-point">
+            <h3>周期延拓观点</h3>
+            <p>DFT可以通过周期延拓与DFS联系：</p>
+            <ol>
+                <li><strong>有限长序列</strong>：x[n], n = 0, 1, ..., N-1</li>
+                <li><strong>周期延拓</strong>：x̃[n] = x[n mod N]（周期为N）</li>
+                <li><strong>DFS计算</strong>：X̃[k] = DFS{x̃[n]}</li>
+                <li><strong>主值序列</strong>：X[k] = X̃[k], k = 0, 1, ..., N-1</li>
+            </ol>
+            
+            <div class="important">
+                <p><strong>结论：</strong>DFT = DFS的一个周期！</p>
+            </div>
+        </div>
+        
+        <h2>5.4 DFT的重要性质</h2>
+        
+        <div class="property-grid">
+            <div class="property-item">
+                <h4>1. 线性</h4>
+                <div class="formula">
+                    ax₁[n] + bx₂[n] ↔ aX₁[k] + bX₂[k]
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>2. 周期性</h4>
+                <div class="formula">
+                    X[k] = X[k + N]<br>
+                    x[n] = x[n + N]
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>3. 对称性（实序列）</h4>
+                <div class="formula">
+                    X[k] = X*[N-k] = X*[(-k)<sub>N</sub>]
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>4. 时移</h4>
+                <div class="formula">
+                    x[(n-m)<sub>N</sub>] ↔ X[k]W<sub>N</sub><sup>km</sup>
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>5. 频移</h4>
+                <div class="formula">
+                    x[n]W<sub>N</sub><sup>-ln</sup> ↔ X[(k-l)<sub>N</sub>]
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>6. 循环卷积</h4>
+                <div class="formula">
+                    x₁[n] ⊛ x₂[n] ↔ X₁[k]X₂[k]
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>7. 频域卷积</h4>
+                <div class="formula">
+                    x₁[n]x₂[n] ↔ (1/N)X₁[k] ⊛ X₂[k]
+                </div>
+            </div>
+            
+            <div class="property-item">
+                <h4>8. 帕塞瓦尔定理</h4>
+                <div class="formula">
+                    ∑<sub>n=0</sub><sup>N-1</sup>|x[n]|² = (1/N)∑<sub>k=0</sub><sup>N-1</sup>|X[k]|²
+                </div>
+            </div>
+        </div>
+        
+        <div class="important">
+            <h3>⚠️ 重要注意事项</h3>
+            <ul>
+                <li><strong>周期性</strong>：所有下标运算都是模N意义下的</li>
+                <li><strong>循环特性</strong>：时移、卷积等都是循环的</li>
+                <li><strong>有限长</strong>：DFT只适用于有限长序列</li>
+                <li><strong>精确性</strong>：N个DFT样本完全确定N点序列</li>
+            </ul>
+        </div>
+        
+        <div class="plot-container">
+            <h3>DFT性质演示</h3>
+            <canvas id="dftProperties" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>演示性质：</label>
+                <select id="propertyType">
+                    <option value="time_shift">时移性质</option>
+                    <option value="freq_shift">频移性质</option>
+                    <option value="symmetry">对称性质</option>
+                    <option value="convolution">循环卷积</option>
+                </select>
+                <label>参数：</label>
+                <input type="number" id="propertyParam" value="2" min="0" max="7">
+                <button onclick="demonstrateProperty()">演示性质</button>
+            </div>
+        </div>
+        
+        <h2>5.5 循环卷积详解</h2>
+        
+        <div class="knowledge-point">
+            <h3>循环卷积定义</h3>
+            <p>两个有限长序列x₁[n]和x₂[n]（长度都为N）的循环卷积定义为：</p>
+            <div class="formula">
+                y[n] = x₁[n] ⊛ x₂[n] = ∑<sub>m=0</sub><sup>N-1</sup> x₁[m]x₂[(n-m)<sub>N</sub>]
+            </div>
+            
+            <div class="example">
+                <h4>循环卷积vs线性卷积</h4>
+                <ul>
+                    <li><strong>线性卷积</strong>：结果长度为N₁+N₂-1</li>
+                    <li><strong>循环卷积</strong>：结果长度为max(N₁,N₂)</li>
+                    <li><strong>关系</strong>：适当补零可使循环卷积等于线性卷积</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>循环卷积计算器</h3>
+            <canvas id="circularConvolution" width="800" height="300"></canvas>
+            <div class="controls">
+                <label>序列1：</label>
+                <input type="text" id="seq1" value="1,2,1,0" placeholder="用逗号分隔">
+                <label>序列2：</label>
+                <input type="text" id="seq2" value="1,1,1,1" placeholder="用逗号分隔">
+                <button onclick="calculateCircularConv()">计算循环卷积</button>
+            </div>
+            <div id="convolutionResult" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <h2>5.6 DFT的计算复杂度与FFT</h2>
+        
+        <div class="knowledge-point">
+            <h3>计算复杂度分析</h3>
+            <table>
+                <tr>
+                    <th>算法</th>
+                    <th>复杂度</th>
+                    <th>乘法次数</th>
+                    <th>适用条件</th>
+                </tr>
+                <tr>
+                    <td>直接DFT</td>
+                    <td>O(N²)</td>
+                    <td>N²</td>
+                    <td>任意N</td>
+                </tr>
+                <tr>
+                    <td>基-2 FFT</td>
+                    <td>O(N log₂N)</td>
+                    <td>(N/2)log₂N</td>
+                    <td>N = 2ᵐ</td>
+                </tr>
+                <tr>
+                    <td>混合基FFT</td>
+                    <td>O(N log N)</td>
+                    <td>~N log N</td>
+                    <td>N = p₁^α₁ × p₂^α₂ × ...</td>
+                </tr>
+                <tr>
+                    <td>Chirp-Z变换</td>
+                    <td>O(N log N)</td>
+                    <td>~3N log N</td>
+                    <td>任意N</td>
+                </tr>
+            </table>
+            
+            <div class="important">
+                <p><strong>效率提升：</strong>当N=1024时，FFT比直接DFT快约100倍！</p>
+            </div>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：DFT基本计算</h4>
+            <p>计算序列 x[n] = {1, 1, 0, 0} 的4点DFT</p>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                X[0] = 1 + 1 + 0 + 0 = 2<br>
+                X[1] = 1 + 1·e^(-jπ/2) + 0 + 0 = 1 - j<br>
+                X[2] = 1 + 1·e^(-jπ) + 0 + 0 = 1 - 1 = 0<br>
+                X[3] = 1 + 1·e^(-j3π/2) + 0 + 0 = 1 + j<br>
+                即：X[k] = {2, 1-j, 0, 1+j}
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：DFT性质应用</h4>
+            <p>已知4点序列x[n]的DFT为X[k] = {4, 1-j, 0, 1+j}</p>
+            <p>求：</p>
+            <ol>
+                <li>y₁[n] = x[(n-1)₄] 的DFT Y₁[k]</li>
+                <li>y₂[n] = x[n]·(-j)ⁿ 的DFT Y₂[k]</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                1. 时移性质：Y₁[k] = X[k]·W₄^k = X[k]·e^(-jπk/2)<br>
+                   Y₁[k] = {4, 1-j, 0, 1+j}·{1, -j, -1, j} = {4, -(1-j)j, 0, (1+j)j} = {4, 1+j, 0, -1+j}<br>
+                2. 频移性质：Y₂[k] = X[(k-1)₄] = {1+j, 4, 1-j, 0}
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：循环卷积</h4>
+            <p>计算x₁[n] = {1, 2, 0, 1}和x₂[n] = {2, 1, 0, 1}的4点循环卷积</p>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                方法1：直接计算<br>
+                y[0] = 1×2 + 2×1 + 0×0 + 1×1 = 5<br>
+                y[1] = 1×1 + 2×2 + 0×1 + 1×0 = 5<br>
+                y[2] = 1×0 + 2×1 + 0×2 + 1×1 = 3<br>
+                y[3] = 1×1 + 2×0 + 0×1 + 1×2 = 3<br>
+                结果：y[n] = {5, 5, 3, 3}
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：DFT与DTFT关系</h4>
+            <p>序列x[n] = {1, 0.5, 0, 0}，求：</p>
+            <ol>
+                <li>DTFT X(e^jω)在ω = π/2处的值</li>
+                <li>4点DFT的X[1]</li>
+                <li>比较两者关系</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                1. X(e^jω) = 1 + 0.5e^(-jω)，在ω=π/2：X(e^jπ/2) = 1 + 0.5(-j) = 1 - 0.5j<br>
+                2. X[1] = 1 + 0.5e^(-jπ/2) = 1 + 0.5(-j) = 1 - 0.5j<br>
+                3. X[1] = X(e^jω)|_{ω=2π·1/4=π/2}，验证了DFT是DTFT的频率采样
+            </div>
+        </div>
+        
+        <h2>5.7 学习要点总结</h2>
+        
+        <div class="important">
+            <h3>🎯 DFT核心要点</h3>
+            <ol>
+                <li><strong>定义理解</strong>：有限长序列的频域表示</li>
+                <li><strong>采样观点</strong>：DFT = DTFT的频率采样</li>
+                <li><strong>周期延拓</strong>：DFT = DFS的主值序列</li>
+                <li><strong>重要性质</strong>：8个核心性质要熟练掌握</li>
+                <li><strong>循环特性</strong>：所有运算都是模N的循环运算</li>
+                <li><strong>计算效率</strong>：FFT算法的重要性</li>
+                <li><strong>实际应用</strong>：数字滤波、频谱分析的基础</li>
+            </ol>
+        </div>
+        
+        <div class="relationship-box">
+            <h3>🔗 知识点总结关系图</h3>
+            <p><strong>z变换</strong> → <strong>DTFT</strong> → <strong>DFS</strong> → <strong>DFT</strong> → <strong>FFT</strong></p>
+            <ul>
+                <li>z变换：最一般的变换，包含ROC概念</li>
+                <li>DTFT：z变换在单位圆上，连续频谱</li>
+                <li>DFS：周期序列的离散频谱</li>
+                <li>DFT：有限长序列的离散频谱，实用性最强</li>
+                <li>FFT：DFT的快速算法，工程应用核心</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 计算DFT
+        function calculateDFT(x) {
+            const N = x.length;
+            const X = [];
+            
+            for (let k = 0; k < N; k++) {
+                let real = 0;
+                let imag = 0;
+                
+                for (let n = 0; n < N; n++) {
+                    const angle = -2 * Math.PI * k * n / N;
+                    real += x[n] * Math.cos(angle);
+                    imag += x[n] * Math.sin(angle);
+                }
+                
+                X.push({
+                    real: real,
+                    imag: imag,
+                    magnitude: Math.sqrt(real * real + imag * imag),
+                    phase: Math.atan2(imag, real)
+                });
+            }
+            
+            return X;
+        }
+        
+        // 计算DTFT（在指定频率点）
+        function calculateDTFT(x, omega) {
+            let real = 0;
+            let imag = 0;
+            
+            for (let n = 0; n < x.length; n++) {
+                const angle = -omega * n;
+                real += x[n] * Math.cos(angle);
+                imag += x[n] * Math.sin(angle);
+            }
+            
+            return {
+                real: real,
+                imag: imag,
+                magnitude: Math.sqrt(real * real + imag * imag),
+                phase: Math.atan2(imag, real)
+            };
+        }
+        
+        // 生成测试序列
+        function generateTestSequence(type, N) {
+            const sequence = [];
+            
+            switch (type) {
+                case 'rectangular':
+                    for (let n = 0; n < N; n++) {
+                        sequence.push(n < N/4 ? 1 : 0);
+                    }
+                    break;
+                case 'triangular':
+                    for (let n = 0; n < N; n++) {
+                        if (n < N/2) {
+                            sequence.push(2*n/(N-1));
+                        } else {
+                            sequence.push(2*(N-1-n)/(N-1));
+                        }
+                    }
+                    break;
+                case 'exponential':
+                    for (let n = 0; n < N; n++) {
+                        sequence.push(Math.pow(0.8, n));
+                    }
+                    break;
+                case 'gaussian':
+                    const sigma = N/6;
+                    const mean = N/2;
+                    for (let n = 0; n < N; n++) {
+                        sequence.push(Math.exp(-Math.pow(n - mean, 2)/(2*sigma*sigma)));
+                    }
+                    break;
+            }
+            
+            return sequence;
+        }
+        
+        // 绘制采样演示
+        function plotSamplingDemo() {
+            const type = document.getElementById('samplingSequence').value;
+            const N = parseInt(document.getElementById('samplingN').value);
+            
+            const sequence = generateTestSequence(type, N);
+            
+            // 绘制连续DTFT
+            plotDTFTContinuous(sequence);
+            
+            // 绘制DFT采样点
+            plotDFTSamples(sequence);
+        }
+        
+        function plotDTFTContinuous(sequence) {
+            const canvas = document.getElementById('dtftContinuous');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerY = height * 0.8;
+            const scaleX = width / (2 * Math.PI);
+            
+            // 坐标轴
+            drawAxes(ctx, width, height, centerY, 'ω', '|X(e^jω)|');
+            
+            // 计算并绘制DTFT
+            const dtftData = [];
+            for (let omega = 0; omega <= 2 * Math.PI; omega += 0.02) {
+                const dtft = calculateDTFT(sequence, omega);
+                dtftData.push(dtft.magnitude);
+            }
+            
+            const maxMag = Math.max(...dtftData);
+            const scaleY = (height * 0.5) / maxMag;
+            
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            dtftData.forEach((mag, index) => {
+                const omega = index * 0.02;
+                const x = omega * scaleX;
+                const y = centerY - mag * scaleY;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+        
+        function plotDFTSamples(sequence) {
+            const canvas = document.getElementById('dftSamples');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerY = height * 0.8;
+            const scaleX = width / (2 * Math.PI);
+            
+            // 坐标轴
+            drawAxes(ctx, width, height, centerY, 'ω', '|X[k]|');
+            
+            // 计算DFT
+            const dftCoeffs = calculateDFT(sequence);
+            const N = sequence.length;
+            
+            const maxMag = Math.max(...dftCoeffs.map(c => c.magnitude));
+            const scaleY = (height * 0.5) / maxMag;
+            
+            // 绘制DFT样本
+            ctx.strokeStyle = 'red';
+            ctx.fillStyle = 'red';
+            ctx.lineWidth = 2;
+            
+            dftCoeffs.forEach((coeff, k) => {
+                const omega = 2 * Math.PI * k / N;
+                const x = omega * scaleX;
+                const y = centerY - coeff.magnitude * scaleY;
+                
+                // 茎
+                ctx.beginPath();
+                ctx.moveTo(x, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // 点
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 标记频率
+                if (k < N/2) {
+                    ctx.fillStyle = '#333';
+                    ctx.font = '8px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${k}`, x, centerY + 12);
+                    ctx.fillStyle = 'red';
+                }
+            });
+        }
+        
+        // 绘制坐标轴
+        function drawAxes(ctx, width, height, centerY, xLabel, yLabel) {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // x轴
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            // y轴
+            ctx.beginPath();
+            ctx.moveTo(40, 20);
+            ctx.lineTo(40, height - 20);
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(xLabel, width - 10, centerY + 15);
+            ctx.fillText(yLabel, 40, 15);
+            
+            // 频率刻度
+            const freqs = [0, 'π/2', 'π', '3π/2', '2π'];
+            const positions = [0, Math.PI/2, Math.PI, 3*Math.PI/2, 2*Math.PI];
+            const scaleX = width / (2 * Math.PI);
+            
+            positions.forEach((pos, index) => {
+                const x = pos * scaleX;
+                if (x >= 20 && x <= width - 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY - 3);
+                    ctx.lineTo(x, centerY + 3);
+                    ctx.stroke();
+                    
+                    ctx.fillText(freqs[index], x, centerY + 25);
+                }
+            });
+        }
+        
+        // 演示DFT性质
+        function demonstrateProperty() {
+            const property = document.getElementById('propertyType').value;
+            const param = parseInt(document.getElementById('propertyParam').value);
+            
+            // 生成测试序列
+            const x = [1, 1, 0, 0, 0, 0, 0, 0]; // 8点序列
+            const X = calculateDFT(x);
+            
+            let y, Y, title1, title2;
+            
+            switch (property) {
+                case 'time_shift':
+                    y = timeShift(x, param);
+                    Y = calculateDFT(y);
+                    title1 = `原序列 x[n]`;
+                    title2 = `时移序列 x[n-${param}]`;
+                    break;
+                case 'freq_shift':
+                    y = frequencyShift(x, param);
+                    Y = calculateDFT(y);
+                    title1 = `原序列 x[n]`;
+                    title2 = `频移序列 x[n]W^{-${param}n}`;
+                    break;
+                case 'symmetry':
+                    // 展示对称性
+                    Y = X.map((coeff, k) => ({
+                        ...coeff,
+                        magnitude: X[(8-k) % 8].magnitude
+                    }));
+                    title1 = `DFT幅度谱 |X[k]|`;
+                    title2 = `对称验证 |X[8-k]|`;
+                    break;
+                case 'convolution':
+                    const h = [1, 0.5, 0.25, 0, 0, 0, 0, 0];
+                    y = circularConvolution(x, h);
+                    Y = calculateDFT(y);
+                    title1 = `输入 x[n]`;
+                    title2 = `循环卷积结果`;
+                    break;
+            }
+            
+            plotPropertyDemo(x, X, y || x, Y, title1, title2);
+        }
+        
+        // 时移函数
+        function timeShift(x, shift) {
+            const N = x.length;
+            const y = new Array(N);
+            for (let n = 0; n < N; n++) {
+                y[n] = x[(n - shift + N) % N];
+            }
+            return y;
+        }
+        
+        // 频移函数
+        function frequencyShift(x, shift) {
+            const N = x.length;
+            const y = new Array(N);
+            for (let n = 0; n < N; n++) {
+                const angle = -2 * Math.PI * shift * n / N;
+                y[n] = x[n] * Math.cos(angle); // 简化为实部
+            }
+            return y;
+        }
+        
+        // 循环卷积
+        function circularConvolution(x1, x2) {
+            const N = x1.length;
+            const y = new Array(N);
+            
+            for (let n = 0; n < N; n++) {
+                y[n] = 0;
+                for (let m = 0; m < N; m++) {
+                    y[n] += x1[m] * x2[(n - m + N) % N];
+                }
+            }
+            
+            return y;
+        }
+        
+        // 绘制性质演示
+        function plotPropertyDemo(x1, X1, x2, X2, title1, title2) {
+            const canvas = document.getElementById('dftProperties');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 分成四个子图
+            const subWidth = width / 2;
+            const subHeight = height / 2;
+            
+            // 时域序列1
+            plotSubsequence(ctx, x1, 0, 0, subWidth, subHeight, title1, 'blue');
+            
+            // 频域序列1
+            plotSubspectrum(ctx, X1, subWidth, 0, subWidth, subHeight, `DFT: ${title1}`, 'blue');
+            
+            // 时域序列2
+            plotSubsequence(ctx, x2, 0, subHeight, subWidth, subHeight, title2, 'red');
+            
+            // 频域序列2
+            plotSubspectrum(ctx, X2, subWidth, subHeight, subWidth, subHeight, `DFT: ${title2}`, 'red');
+        }
+        
+        function plotSubsequence(ctx, data, offsetX, offsetY, subWidth, subHeight, title, color) {
+            const centerY = offsetY + subHeight * 0.8;
+            const scaleX = (subWidth - 40) / (data.length + 1);
+            const maxVal = Math.max(...data.map(Math.abs)) || 1;
+            const scaleY = (subHeight * 0.4) / maxVal;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 20, centerY);
+            ctx.lineTo(offsetX + subWidth - 20, centerY);
+            ctx.stroke();
+            
+            // 序列
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            
+            data.forEach((value, index) => {
+                const x = offsetX + 20 + (index + 1) * scaleX;
+                const y = centerY - value * scaleY;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // 标题
+            ctx.fillStyle = color;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, offsetX + subWidth/2, offsetY + 15);
+        }
+        
+        function plotSubspectrum(ctx, coeffs, offsetX, offsetY, subWidth, subHeight, title, color) {
+            const centerY = offsetY + subHeight * 0.8;
+            const scaleX = (subWidth - 40) / (coeffs.length + 1);
+            const maxMag = Math.max(...coeffs.map(c => c.magnitude)) || 1;
+            const scaleY = (subHeight * 0.4) / maxMag;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 20, centerY);
+            ctx.lineTo(offsetX + subWidth - 20, centerY);
+            ctx.stroke();
+            
+            // 频谱
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            
+            coeffs.forEach((coeff, index) => {
+                const x = offsetX + 20 + (index + 1) * scaleX;
+                const y = centerY - coeff.magnitude * scaleY;
+                
+                ctx.beginPath();
+                ctx.moveTo(x, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // 标题
+            ctx.fillStyle = color;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, offsetX + subWidth/2, offsetY + 15);
+        }
+        
+        // 计算循环卷积
+        function calculateCircularConv() {
+            const seq1Input = document.getElementById('seq1').value;
+            const seq2Input = document.getElementById('seq2').value;
+            
+            const seq1 = seq1Input.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+            const seq2 = seq2Input.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+            
+            if (seq1.length === 0 || seq2.length === 0) {
+                document.getElementById('convolutionResult').innerHTML = '<span style="color: red;">请输入有效的序列！</span>';
+                return;
+            }
+            
+            // 补零到相同长度
+            const N = Math.max(seq1.length, seq2.length);
+            while (seq1.length < N) seq1.push(0);
+            while (seq2.length < N) seq2.push(0);
+            
+            // 计算循环卷积
+            const result = circularConvolution(seq1, seq2);
+            
+            // 显示结果
+            let resultHTML = '<h4>循环卷积结果：</h4>';
+            resultHTML += `<p>y[n] = {${result.map(x => x.toFixed(2)).join(', ')}}</p>`;
+            
+            document.getElementById('convolutionResult').innerHTML = resultHTML;
+            
+            // 绘制图形
+            plotConvolutionDemo(seq1, seq2, result);
+        }
+        
+        function plotConvolutionDemo(x1, x2, y) {
+            const canvas = document.getElementById('circularConvolution');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const subWidth = width / 3;
+            
+            plotSubsequence(ctx, x1, 0, 0, subWidth, height, '序列1: x₁[n]', 'blue');
+            plotSubsequence(ctx, x2, subWidth, 0, subWidth, height, '序列2: x₂[n]', 'green');
+            plotSubsequence(ctx, y, 2*subWidth, 0, subWidth, height, '循环卷积: y[n]', 'red');
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            plotSamplingDemo();
+            demonstrateProperty();
+            calculateCircularConv();
+        };
+    </script>
+</body>
+</html>

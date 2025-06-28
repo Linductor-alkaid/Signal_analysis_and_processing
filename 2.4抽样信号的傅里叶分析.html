@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽样信号的傅里叶分析</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #4facfe;
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            color: #00f2fe;
+            margin-top: 25px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .formula {
+            background: #e3f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1em;
+            margin: 15px 0;
+            border-left: 4px solid #4facfe;
+            text-align: center;
+        }
+        
+        .theorem-box {
+            background: #e8f8f5;
+            border: 2px solid #43e97b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .theorem-box h4 {
+            color: #27ae60;
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+        
+        .canvas-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .signal-canvas {
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #4facfe;
+        }
+        
+        .controls label {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .warning-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+        
+        .warning-button:hover {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .exercise {
+            background: #fff8e1;
+            border: 1px solid #ffcc02;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #f57f17;
+            margin-top: 0;
+        }
+        
+        .answer-input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 10px;
+            width: 200px;
+        }
+        
+        .feedback {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .key-points {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .key-points h4 {
+            color: #0d47a1;
+            margin-top: 0;
+        }
+        
+        .sampling-demo {
+            background: #f3e5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #9c27b0;
+        }
+        
+        .aliasing-demo {
+            background: #ffebee;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #f44336;
+        }
+        
+        .reconstruction-demo {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4caf50;
+        }
+        
+        .spectrum-display {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .triple-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            align-items: start;
+        }
+        
+        .dual-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        ul li {
+            margin: 8px 0;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning h5 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .sampling-rate-indicator {
+            background: #e1f5fe;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .adequate {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        
+        .inadequate {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        
+        .critical {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 抽样信号的傅里叶分析</h1>
+        
+        <div class="section">
+            <h2>1. 时域抽样的基本概念</h2>
+            
+            <h3>1.1 抽样的定义</h3>
+            <div class="key-points">
+                <h4>抽样过程：</h4>
+                <ul>
+                    <li><strong>连续信号 → 离散信号</strong>：从连续时间信号中按一定时间间隔取值</li>
+                    <li><strong>抽样周期Ts</strong>：相邻两个抽样点的时间间隔</li>
+                    <li><strong>抽样频率fs = 1/Ts</strong>：每秒抽样的次数</li>
+                    <li><strong>数字化第一步</strong>：模拟信号处理的基础</li>
+                </ul>
+            </div>
+            
+            <h3>1.2 理想抽样的数学描述</h3>
+            <div class="formula">
+                抽样信号：xs(t) = x(t) · ∑_{n=-∞}^{∞} δ(t - nTs)<br><br>
+                离散序列：x[n] = x(nTs), n = 0, ±1, ±2, ...
+            </div>
+            
+            <div class="sampling-demo">
+                <h4>抽样过程可视化</h4>
+                <div class="controls">
+                    <label>原始信号:</label>
+                    <select id="originalSignal" onchange="updateSamplingDemo()">
+                        <option value="sine">正弦波</option>
+                        <option value="cosine">余弦波</option>
+                        <option value="complex">复合信号</option>
+                        <option value="chirp">线性调频</option>
+                    </select>
+                    <label>信号频率fm:</label>
+                    <input type="range" id="signalFreq" min="0.5" max="10" step="0.5" value="2">
+                    <span id="signalFreqValue">2</span> Hz
+                    <label>抽样频率fs:</label>
+                    <input type="range" id="samplingFreq" min="1" max="50" step="1" value="10">
+                    <span id="samplingFreqValue">10</span> Hz
+                    <button onclick="updateSamplingDemo()">更新演示</button>
+                    <button onclick="animateSampling()">动画演示</button>
+                </div>
+                
+                <div class="sampling-rate-indicator" id="samplingIndicator">
+                    抽样率分析将在这里显示
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="samplingTimeCanvas" class="signal-canvas" width="700" height="300"></canvas>
+                    <canvas id="samplingSpectrumCanvas" class="signal-canvas" width="700" height="300"></canvas>
+                </div>
+                <div id="samplingAnalysis" class="spectrum-display">抽样分析结果</div>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题1：</h4>
+                <p>对频率为5Hz的正弦信号进行抽样，至少需要多高的抽样频率才能避免混叠？</p>
+                <input type="number" id="answer1" class="answer-input" placeholder="输入频率(Hz)" step="0.1">
+                <button onclick="checkAnswer1()">提交答案</button>
+                <div id="feedback1" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>2. 抽样定理（奈奎斯特定理）</h2>
+            
+            <div class="theorem-box">
+                <h4>🎯 奈奎斯特抽样定理</h4>
+                <div class="formula">
+                    <strong>条件：</strong>如果连续信号x(t)是带限的，即X(jω) = 0, |ω| > ωm<br>
+                    <strong>结论：</strong>当抽样频率fs ≥ 2fm时，可以从抽样信号完全重构原信号<br>
+                    <strong>关键：</strong>ωs = 2π/Ts ≥ 2ωm，即fs ≥ 2fm
+                </div>
+                <p><strong>奈奎斯特频率：</strong>fN = 2fm（最低抽样频率）</p>
+                <p><strong>奈奎斯特率：</strong>每秒至少抽样2fm次</p>
+            </div>
+            
+            <h3>2.1 抽样定理的频域解释</h3>
+            <div class="formula">
+                抽样信号的频谱：Xs(jω) = (1/Ts) ∑_{k=-∞}^{∞} X(j(ω - kωs))<br><br>
+                频谱周期性延拓，周期为ωs = 2π/Ts
+            </div>
+            
+            <div class="aliasing-demo">
+                <h4>抽样定理验证与混叠演示</h4>
+                <div class="controls">
+                    <label>信号类型:</label>
+                    <select id="theoremSignal" onchange="updateTheoremDemo()">
+                        <option value="bandlimited">理想带限信号</option>
+                        <option value="sinc">sinc脉冲</option>
+                        <option value="gaussian">高斯脉冲</option>
+                    </select>
+                    <label>信号带宽fm:</label>
+                    <input type="range" id="signalBandwidth" min="1" max="10" step="0.5" value="3">
+                    <span id="signalBandwidthValue">3</span> Hz
+                    <label>抽样率倍数:</label>
+                    <input type="range" id="samplingRatio" min="0.5" max="5" step="0.1" value="2.5">
+                    <span id="samplingRatioValue">2.5</span> × 2fm
+                    <button onclick="updateTheoremDemo()">更新演示</button>
+                </div>
+                
+                <div class="triple-view">
+                    <div>
+                        <canvas id="originalSpectrumCanvas" class="signal-canvas" width="400" height="250"></canvas>
+                        <p style="text-align: center;"><strong>原信号频谱</strong></p>
+                    </div>
+                    <div>
+                        <canvas id="sampledSpectrumCanvas" class="signal-canvas" width="400" height="250"></canvas>
+                        <p style="text-align: center;"><strong>抽样后频谱</strong></p>
+                    </div>
+                    <div>
+                        <canvas id="aliasingCanvas" class="signal-canvas" width="400" height="250"></canvas>
+                        <p style="text-align: center;"><strong>混叠分析</strong></p>
+                    </div>
+                </div>
+                <div id="theoremAnalysis" class="spectrum-display">定理验证结果</div>
+            </div>
+            
+            <div class="warning">
+                <h5>⚠️ 混叠现象（Aliasing）</h5>
+                <p><strong>产生条件：</strong>fs < 2fm（违反抽样定理）</p>
+                <p><strong>现象：</strong>高频分量被误认为低频分量</p>
+                <p><strong>后果：</strong>信息丢失，无法完全重构原信号</p>
+                <p><strong>避免方法：</strong>提高抽样率或使用抗混叠滤波器</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题2：</h4>
+                <p>一个信号包含1Hz、3Hz、5Hz三个频率分量，用8Hz进行抽样会发生什么？</p>
+                <select id="answer2" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="no_aliasing">不会混叠</option>
+                    <option value="aliasing_5hz">5Hz分量会混叠</option>
+                    <option value="aliasing_35hz">3Hz和5Hz都会混叠</option>
+                </select>
+                <button onclick="checkAnswer2()">提交答案</button>
+                <div id="feedback2" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>3. 信号重构与插值</h2>
+            
+            <h3>3.1 理想重构公式</h3>
+            <div class="formula">
+                理想重构：x(t) = ∑_{n=-∞}^{∞} x(nTs) · sinc((t - nTs)/Ts)<br><br>
+                其中：sinc(x) = sin(πx)/(πx)
+            </div>
+            
+            <h3>3.2 重构的条件</h3>
+            <div class="key-points">
+                <h4>完美重构的要求：</h4>
+                <ul>
+                    <li><strong>信号带限</strong>：X(jω) = 0, |ω| > ωm</li>
+                    <li><strong>抽样率足够</strong>：fs ≥ 2fm</li>
+                    <li><strong>理想低通滤波</strong>：截止频率ωc = ωm</li>
+                    <li><strong>无限长sinc函数</strong>：实际中不可实现</li>
+                </ul>
+            </div>
+            
+            <div class="reconstruction-demo">
+                <h4>信号重构演示</h4>
+                <div class="controls">
+                    <label>重构方法:</label>
+                    <select id="reconstructionMethod" onchange="updateReconstructionDemo()">
+                        <option value="ideal">理想重构(sinc)</option>
+                        <option value="zoh">零阶保持</option>
+                        <option value="linear">线性插值</option>
+                        <option value="cubic">三次样条</option>
+                    </select>
+                    <label>抽样点数:</label>
+                    <input type="range" id="sampleCount" min="5" max="50" step="5" value="20">
+                    <span id="sampleCountValue">20</span>
+                    <label>sinc截断长度:</label>
+                    <input type="range" id="sincLength" min="5" max="50" step="5" value="20">
+                    <span id="sincLengthValue">20</span>
+                    <button onclick="updateReconstructionDemo()">更新重构</button>
+                </div>
+                
+                <div class="dual-view">
+                    <div>
+                        <canvas id="reconstructionCanvas" class="signal-canvas" width="600" height="350"></canvas>
+                        <p style="text-align: center;"><strong>时域重构对比</strong></p>
+                    </div>
+                    <div>
+                        <canvas id="reconstructionErrorCanvas" class="signal-canvas" width="600" height="350"></canvas>
+                        <p style="text-align: center;"><strong>重构误差分析</strong></p>
+                    </div>
+                </div>
+                <div id="reconstructionAnalysis" class="spectrum-display">重构质量分析</div>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题3：</h4>
+                <p>理想重构使用的插值函数是什么？</p>
+                <select id="answer3" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="sinc">sinc函数</option>
+                    <option value="rect">矩形函数</option>
+                    <option value="triangle">三角函数</option>
+                </select>
+                <button onclick="checkAnswer3()">提交答案</button>
+                <div id="feedback3" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>4. 实际抽样的考虑因素</h2>
+            
+            <h3>4.1 实际信号的特点</h3>
+            <div class="warning">
+                <h5>实际挑战：</h5>
+                <ul>
+                    <li><strong>信号不是严格带限的</strong>：总有高频分量存在</li>
+                    <li><strong>抗混叠滤波器</strong>：抽样前必须进行低通滤波</li>
+                    <li><strong>量化误差</strong>：ADC的位数限制</li>
+                    <li><strong>抽样时钟抖动</strong>：抽样时刻的不准确性</li>
+                </ul>
+            </div>
+            
+            <h3>4.2 抗混叠滤波器设计</h3>
+            <div class="formula">
+                滤波器要求：<br>
+                • 通带：|H(jω)| ≈ 1, |ω| ≤ ωm<br>
+                • 阻带：|H(jω)| ≈ 0, |ω| ≥ ωs/2 - ωm<br>
+                • 过渡带：ωm < |ω| < ωs/2 - ωm
+            </div>
+            
+            <div class="sampling-demo">
+                <h4>实际抽样系统演示</h4>
+                <div class="controls">
+                    <label>输入信号:</label>
+                    <select id="realSignal" onchange="updateRealSamplingDemo()">
+                        <option value="music">音乐信号模拟</option>
+                        <option value="speech">语音信号模拟</option>
+                        <option value="noisy">含噪声信号</option>
+                    </select>
+                    <label>抗混叠滤波:</label>
+                    <select id="antiAliasFilter" onchange="updateRealSamplingDemo()">
+                        <option value="none">无滤波</option>
+                        <option value="ideal">理想滤波</option>
+                        <option value="butterworth">巴特沃斯滤波</option>
+                    </select>
+                    <label>抽样率:</label>
+                    <input type="range" id="realSamplingRate" min="8000" max="48000" step="1000" value="16000">
+                    <span id="realSamplingRateValue">16000</span> Hz
+                    <button onclick="updateRealSamplingDemo()">更新演示</button>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="realInputCanvas" class="signal-canvas" width="500" height="200"></canvas>
+                    <canvas id="realFilteredCanvas" class="signal-canvas" width="500" height="200"></canvas>
+                    <canvas id="realSampledCanvas" class="signal-canvas" width="500" height="200"></canvas>
+                </div>
+                <div id="realSamplingAnalysis" class="spectrum-display">实际抽样分析</div>
+            </div>
+            
+            <h3>4.3 常见抽样标准</h3>
+            <div class="key-points">
+                <h4>工程应用中的抽样率：</h4>
+                <ul>
+                    <li><strong>电话音质</strong>：8 kHz（语音带宽≈3.4 kHz）</li>
+                    <li><strong>CD音质</strong>：44.1 kHz（音频带宽≈20 kHz）</li>
+                    <li><strong>DVD音质</strong>：48 kHz 或 96 kHz</li>
+                    <li><strong>专业音频</strong>：192 kHz</li>
+                    <li><strong>为什么44.1k？</strong>：20 kHz × 2.205 ≈ 44.1 kHz</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题4：</h4>
+                <p>CD音质采用44.1kHz抽样率，这样设计的主要原因是什么？</p>
+                <select id="answer4" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="human_hearing">人耳听觉范围约20kHz</option>
+                    <option value="technical_limit">当时技术限制</option>
+                    <option value="storage_cost">存储成本考虑</option>
+                </select>
+                <button onclick="checkAnswer4()">提交答案</button>
+                <div id="feedback4" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>5. 数字信号处理简介</h2>
+            
+            <h3>5.1 从模拟到数字</h3>
+            <div class="key-points">
+                <h4>A/D转换过程：</h4>
+                <ul>
+                    <li><strong>1. 抗混叠滤波</strong>：去除高频干扰</li>
+                    <li><strong>2. 抽样</strong>：时间离散化</li>
+                    <li><strong>3. 量化</strong>：幅度离散化</li>
+                    <li><strong>4. 编码</strong>：转换为数字序列</li>
+                </ul>
+            </div>
+            
+            <h3>5.2 数字信号的优势</h3>
+            <div class="formula">
+                优势：<br>
+                • 精确性：避免模拟电路的漂移<br>
+                • 灵活性：软件实现，易于修改<br>
+                • 可重复性：数字处理结果一致<br>
+                • 复杂算法：可实现复杂的处理算法
+            </div>
+            
+            <div class="sampling-demo">
+                <h4>ADC/DAC过程模拟</h4>
+                <div class="controls">
+                    <label>ADC位数:</label>
+                    <select id="adcBits" onchange="updateADCDemo()">
+                        <option value="4">4位</option>
+                        <option value="8">8位</option>
+                        <option value="12">12位</option>
+                        <option value="16">16位</option>
+                    </select>
+                    <label>抽样率:</label>
+                    <input type="range" id="adcSamplingRate" min="10" max="100" step="10" value="40">
+                    <span id="adcSamplingRateValue">40</span> Hz
+                    <button onclick="updateADCDemo()">更新演示</button>
+                </div>
+                
+                <div class="canvas-container">
+                    <canvas id="adcOriginalCanvas" class="signal-canvas" width="600" height="250"></canvas>
+                    <canvas id="adcQuantizedCanvas" class="signal-canvas" width="600" height="250"></canvas>
+                </div>
+                <div id="adcAnalysis" class="spectrum-display">ADC性能分析</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 本章小结</h2>
+            <div class="key-points">
+                <h4>核心要点：</h4>
+                <ul>
+                    <li><strong>抽样定理</strong>：fs ≥ 2fm，连接连续和离散信号的桥梁</li>
+                    <li><strong>混叠现象</strong>：违反抽样定理的后果，不可逆转</li>
+                    <li><strong>信号重构</strong>：理想重构需要sinc插值</li>
+                    <li><strong>实际考虑</strong>：抗混叠滤波、量化误差、工程权衡</li>
+                    <li><strong>应用意义</strong>：数字信号处理的理论基础</li>
+                </ul>
+            </div>
+            
+            <div class="theorem-box">
+                <h4>📚 重要公式总结</h4>
+                <div class="formula">
+                    1. 抽样定理：fs ≥ 2fm<br>
+                    2. 频谱周期延拓：Xs(jω) = (1/Ts)∑X(j(ω-kωs))<br>
+                    3. 理想重构：x(t) = ∑x(nTs)sinc((t-nTs)/Ts)<br>
+                    4. 奈奎斯特频率：fN = 2fm
+                </div>
+            </div>
+            
+            <div class="exercise">
+                <h4>🎯 综合练习：</h4>
+                <p>一个语音信号的最高频率为4kHz，现要求重构误差小于1%，应该选择多高的抽样频率？</p>
+                <input type="number" id="answer5" class="answer-input" placeholder="输入频率(kHz)" step="0.1">
+                <button onclick="checkAnswer5()">提交答案</button>
+                <div id="feedback5" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let animationId;
+        const colors = {
+            primary: '#4facfe',
+            secondary: '#00f2fe', 
+            accent: '#43e97b',
+            success: '#27ae60',
+            warning: '#f39c12',
+            danger: '#e74c3c',
+            info: '#3498db',
+            purple: '#9c27b0'
+        };
+        
+        // 数学工具函数
+        function sinc(x) {
+            return (Math.abs(x) < 1e-10) ? 1 : Math.sin(Math.PI * x) / (Math.PI * x);
+        }
+        
+        function generateSignal(type, t, freq, params = {}) {
+            switch(type) {
+                case 'sine':
+                    return Math.sin(2 * Math.PI * freq * t);
+                case 'cosine':
+                    return Math.cos(2 * Math.PI * freq * t);
+                case 'complex':
+                    return Math.sin(2 * Math.PI * freq * t) + 0.3 * Math.sin(2 * Math.PI * 3 * freq * t);
+                case 'chirp':
+                    return Math.sin(2 * Math.PI * freq * t * (1 + 0.5 * t));
+                case 'bandlimited':
+                    // 模拟带限信号
+                    return sinc(2 * freq * t) * Math.cos(2 * Math.PI * freq * t / 3);
+                case 'sinc':
+                    return sinc(2 * freq * t);
+                case 'gaussian':
+                    return Math.exp(-(freq * t) * (freq * t));
+                default:
+                    return 0;
+            }
+        }
+        
+        // 绘图工具函数
+        function drawAxis(ctx, width, height, xLabel = 't', yLabel = 'x(t)', showGrid = true) {
+            ctx.clearRect(0, 0, width, height);
+            
+            if (showGrid) {
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.lineWidth = 0.5;
+                for (let i = 40; i < width - 40; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 20);
+                    ctx.lineTo(i, height - 20);
+                    ctx.stroke();
+                }
+                for (let i = 20; i < height - 20; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(40, i);
+                    ctx.lineTo(width - 40, i);
+                    ctx.stroke();
+                }
+            }
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(40, centerY);
+            ctx.lineTo(width - 40, centerY);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(centerX, 20);
+            ctx.lineTo(centerX, height - 20);
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText(xLabel, width - 30, centerY + 20);
+            ctx.fillText(yLabel, centerX + 10, 35);
+            ctx.fillText('0', centerX + 5, centerY + 15);
+        }
+        
+        function drawFrequencyAxis(ctx, width, height, maxFreq = 10) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            const centerX = width / 2;
+            const centerY = height - 40;
+            
+            // X轴（频率轴）
+            ctx.beginPath();
+            ctx.moveTo(40, centerY);
+            ctx.lineTo(width - 40, centerY);
+            ctx.stroke();
+            
+            // Y轴（幅度轴）
+            ctx.beginPath();
+            ctx.moveTo(centerX, 20);
+            ctx.lineTo(centerX, centerY);
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('f (Hz)', width - 30, centerY + 20);
+            ctx.fillText('|X(f)|', centerX + 10, 35);
+            ctx.fillText('0', centerX - 5, centerY + 15);
+            
+            // 频率刻度
+            const freqScale = (width - 80) / (2 * maxFreq);
+            for (let f = -maxFreq; f <= maxFreq; f += maxFreq/5) {
+                if (f !== 0) {
+                    const x = centerX + f * freqScale;
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY - 5);
+                    ctx.lineTo(x, centerY + 5);
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#666';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(f.toFixed(0), x - 5, centerY + 18);
+                }
+            }
+        }
+        
+        // 抽样演示
+        function updateSamplingDemo() {
+            const signalType = document.getElementById('originalSignal').value;
+            const fm = parseFloat(document.getElementById('signalFreq').value);
+            const fs = parseFloat(document.getElementById('samplingFreq').value);
+            
+            document.getElementById('signalFreqValue').textContent = fm;
+            document.getElementById('samplingFreqValue').textContent = fs;
+            
+            const timeCanvas = document.getElementById('samplingTimeCanvas');
+            const spectrumCanvas = document.getElementById('samplingSpectrumCanvas');
+            const timeCtx = timeCanvas.getContext('2d');
+            const spectrumCtx = spectrumCanvas.getContext('2d');
+            
+            // 绘制时域图
+            drawAxis(timeCtx, 700, 300, 't (s)', 'x(t)');
+            drawSamplingTimeSignal(timeCtx, signalType, fm, fs);
+            
+            // 绘制频域图
+            drawFrequencyAxis(spectrumCtx, 700, 300, Math.max(15, fs));
+            drawSamplingSpectrum(spectrumCtx, signalType, fm, fs);
+            
+            // 更新分析
+            updateSamplingIndicator(fm, fs);
+            analyzeSampling(signalType, fm, fs);
+        }
+        
+        function drawSamplingTimeSignal(ctx, signalType, fm, fs) {
+            const centerX = 350;
+            const centerY = 150;
+            const scaleX = 100;
+            const scaleY = 80;
+            const Ts = 1 / fs;
+            
+            // 绘制连续信号
+            ctx.strokeStyle = colors.info;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            
+            let first = true;
+            for (let t = -3; t <= 3; t += 0.01) {
+                const y = generateSignal(signalType, t, fm);
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 绘制抽样点
+            ctx.fillStyle = colors.danger;
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = 2;
+            
+            for (let n = Math.floor(-3 * fs); n <= Math.ceil(3 * fs); n++) {
+                const t = n * Ts;
+                if (Math.abs(t) <= 3) {
+                    const y = generateSignal(signalType, t, fm);
+                    const x = centerX + t * scaleX;
+                    const plotY = centerY - y * scaleY;
+                    
+                    // 抽样点
+                    ctx.beginPath();
+                    ctx.arc(x, plotY, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // 垂直线
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, plotY);
+                    ctx.stroke();
+                }
+            }
+            
+            // 图例
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('原信号(虚线)', 50, 30);
+            ctx.fillText('抽样点(红点)', 150, 30);
+        }
+        
+        function drawSamplingSpectrum(ctx, signalType, fm, fs) {
+            const centerX = 350;
+            const centerY = 260;
+            const freqScale = 20;
+            const ampScale = 100;
+            
+            // 绘制原信号频谱
+            ctx.strokeStyle = colors.info;
+            ctx.lineWidth = 2;
+            drawOriginalSpectrum(ctx, signalType, fm, centerX, centerY, freqScale, ampScale);
+            
+            // 绘制抽样后的频谱（周期延拓）
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = 2;
+            for (let k = -2; k <= 2; k++) {
+                drawShiftedSpectrum(ctx, signalType, fm, k * fs, centerX, centerY, freqScale, ampScale);
+            }
+            
+            // 标记混叠区域
+            if (fs < 2 * fm) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+                const aliasingStart = centerX + (fs/2 - fm) * freqScale;
+                const aliasingEnd = centerX + (fs/2 + fm) * freqScale;
+                ctx.fillRect(aliasingStart, 20, aliasingEnd - aliasingStart, centerY - 20);
+            }
+        }
+        
+        function drawOriginalSpectrum(ctx, signalType, fm, centerX, centerY, freqScale, ampScale) {
+            ctx.beginPath();
+            
+            switch(signalType) {
+                case 'sine':
+                case 'cosine':
+                    // 单一频率的冲激
+                    const x1 = centerX - fm * freqScale;
+                    const x2 = centerX + fm * freqScale;
+                    ctx.moveTo(x1, centerY);
+                    ctx.lineTo(x1, centerY - ampScale * 0.5);
+                    ctx.moveTo(x2, centerY);
+                    ctx.lineTo(x2, centerY - ampScale * 0.5);
+                    break;
+                    
+                case 'complex':
+                    // 多个频率分量
+                    for (let f of [fm, 3*fm]) {
+                        const x1 = centerX - f * freqScale;
+                        const x2 = centerX + f * freqScale;
+                        const amp = (f === fm) ? 0.5 : 0.15;
+                        ctx.moveTo(x1, centerY);
+                        ctx.lineTo(x1, centerY - ampScale * amp);
+                        ctx.moveTo(x2, centerY);
+                        ctx.lineTo(x2, centerY - ampScale * amp);
+                    }
+                    break;
+                    
+                case 'bandlimited':
+                    // 带限信号的矩形频谱
+                    const width = fm * freqScale;
+                    ctx.rect(centerX - width, centerY - ampScale * 0.5, 2 * width, ampScale * 0.5);
+                    break;
+            }
+            ctx.stroke();
+        }
+        
+        function drawShiftedSpectrum(ctx, signalType, fm, shift, centerX, centerY, freqScale, ampScale) {
+            ctx.save();
+            ctx.translate(shift * freqScale, 0);
+            drawOriginalSpectrum(ctx, signalType, fm, centerX, centerY, freqScale, ampScale * 0.3);
+            ctx.restore();
+        }
+        
+        function updateSamplingIndicator(fm, fs) {
+            const indicator = document.getElementById('samplingIndicator');
+            const nyquistRate = 2 * fm;
+            
+            if (fs >= nyquistRate * 1.2) {
+                indicator.textContent = `✅ 抽样率充足: fs = ${fs}Hz > 2fm = ${nyquistRate}Hz`;
+                indicator.className = 'sampling-rate-indicator adequate';
+            } else if (fs >= nyquistRate) {
+                indicator.textContent = `⚠️ 临界抽样: fs = ${fs}Hz ≈ 2fm = ${nyquistRate}Hz`;
+                indicator.className = 'sampling-rate-indicator critical';
+            } else {
+                indicator.textContent = `❌ 抽样不足: fs = ${fs}Hz < 2fm = ${nyquistRate}Hz (会产生混叠!)`;
+                indicator.className = 'sampling-rate-indicator inadequate';
+            }
+        }
+        
+        function analyzeSampling(signalType, fm, fs) {
+            const analysis = document.getElementById('samplingAnalysis');
+            const nyquistRate = 2 * fm;
+            
+            let result = `<strong>抽样分析结果:</strong><br>`;
+            result += `信号最高频率: ${fm} Hz<br>`;
+            result += `抽样频率: ${fs} Hz<br>`;
+            result += `奈奎斯特率: ${nyquistRate} Hz<br>`;
+            result += `抽样周期: ${(1/fs).toFixed(3)} s<br><br>`;
+            
+            if (fs >= nyquistRate) {
+                result += `✅ 满足抽样定理，可以完全重构原信号<br>`;
+                result += `频谱无重叠，无混叠失真`;
+            } else {
+                result += `❌ 违反抽样定理，发生频谱混叠<br>`;
+                result += `高频分量 ${fm} Hz 会混叠到 ${Math.abs(fs - fm)} Hz`;
+            }
+            
+            analysis.innerHTML = result;
+        }
+        
+        // 抽样定理验证演示
+        function updateTheoremDemo() {
+            const signalType = document.getElementById('theoremSignal').value;
+            const bandwidth = parseFloat(document.getElementById('signalBandwidth').value);
+            const ratio = parseFloat(document.getElementById('samplingRatio').value);
+            
+            document.getElementById('signalBandwidthValue').textContent = bandwidth;
+            document.getElementById('samplingRatioValue').textContent = ratio;
+            
+            const fs = ratio * 2 * bandwidth;
+            
+            const originalCanvas = document.getElementById('originalSpectrumCanvas');
+            const sampledCanvas = document.getElementById('sampledSpectrumCanvas');
+            const aliasingCanvas = document.getElementById('aliasingCanvas');
+            
+            const originalCtx = originalCanvas.getContext('2d');
+            const sampledCtx = sampledCanvas.getContext('2d');
+            const aliasingCtx = aliasingCanvas.getContext('2d');
+            
+            // 绘制原信号频谱
+            drawFrequencyAxis(originalCtx, 400, 250, bandwidth * 3);
+            drawBandlimitedSpectrum(originalCtx, signalType, bandwidth);
+            
+            // 绘制抽样后频谱
+            drawFrequencyAxis(sampledCtx, 400, 250, fs);
+            drawSampledSpectrum(sampledCtx, signalType, bandwidth, fs);
+            
+            // 分析混叠
+            drawFrequencyAxis(aliasingCtx, 400, 250, fs);
+            analyzeAliasing(aliasingCtx, signalType, bandwidth, fs);
+            
+            // 更新分析结果
+            analyzeTheoremDemo(signalType, bandwidth, fs, ratio);
+        }
+        
+        function drawBandlimitedSpectrum(ctx, signalType, bandwidth) {
+            const centerX = 200;
+            const centerY = 210;
+            const freqScale = 15;
+            const ampScale = 80;
+            
+            ctx.fillStyle = colors.info;
+            ctx.strokeStyle = colors.info;
+            ctx.lineWidth = 2;
+            
+            switch(signalType) {
+                case 'bandlimited':
+                    // 理想矩形频谱
+                    const width = bandwidth * freqScale;
+                    ctx.fillRect(centerX - width, centerY - ampScale, 2 * width, ampScale);
+                    break;
+                    
+                case 'sinc':
+                    // sinc函数的频谱（矩形）
+                    const sincWidth = bandwidth * freqScale;
+                    ctx.fillRect(centerX - sincWidth, centerY - ampScale, 2 * sincWidth, ampScale);
+                    break;
+                    
+                case 'gaussian':
+                    // 高斯函数的频谱（高斯形）
+                    ctx.beginPath();
+                    for (let f = -bandwidth * 2; f <= bandwidth * 2; f += 0.1) {
+                        const x = centerX + f * freqScale;
+                        const amplitude = Math.exp(-(f/bandwidth) * (f/bandwidth));
+                        const y = centerY - amplitude * ampScale;
+                        
+                        if (f === -bandwidth * 2) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    ctx.stroke();
+                    break;
+            }
+        }
+        
+        function drawSampledSpectrum(ctx, signalType, bandwidth, fs) {
+            const centerX = 200;
+            const centerY = 210;
+            const freqScale = 5;
+            
+            // 绘制周期延拓的频谱
+            for (let k = -3; k <= 3; k++) {
+                ctx.save();
+                ctx.translate(k * fs * freqScale, 0);
+                ctx.globalAlpha = (k === 0) ? 1 : 0.6;
+                drawBandlimitedSpectrum(ctx, signalType, bandwidth);
+                ctx.restore();
+            }
+        }
+        
+        function analyzeAliasing(ctx, signalType, bandwidth, fs) {
+            const centerX = 200;
+            const centerY = 210;
+            
+            if (fs < 2 * bandwidth) {
+                // 绘制混叠区域
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.fillRect(50, 50, 300, 160);
+                
+                ctx.fillStyle = colors.danger;
+                ctx.font = '14px Arial';
+                ctx.fillText('混叠区域', centerX - 30, centerY - 100);
+                ctx.fillText(`fs < 2fm`, centerX - 30, centerY - 80);
+            } else {
+                ctx.fillStyle = colors.success;
+                ctx.font = '14px Arial';
+                ctx.fillText('无混叠', centerX - 20, centerY - 100);
+                ctx.fillText(`fs ≥ 2fm`, centerX - 20, centerY - 80);
+            }
+        }
+        
+        function analyzeTheoremDemo(signalType, bandwidth, fs, ratio) {
+            const analysis = document.getElementById('theoremAnalysis');
+            
+            let result = `<strong>抽样定理验证:</strong><br>`;
+            result += `信号带宽: ${bandwidth} Hz<br>`;
+            result += `抽样频率: ${fs.toFixed(1)} Hz<br>`;
+            result += `抽样率倍数: ${ratio} × 2fm<br><br>`;
+            
+            if (ratio >= 1) {
+                result += `✅ 满足抽样定理 (fs ≥ 2fm)<br>`;
+                result += `可以完全重构原信号<br>`;
+                result += `频谱无重叠混叠`;
+            } else {
+                result += `❌ 违反抽样定理 (fs < 2fm)<br>`;
+                result += `发生频谱混叠<br>`;
+                result += `信息丢失，无法完全重构`;
+            }
+            
+            analysis.innerHTML = result;
+        }
+        
+        // 重构演示
+        function updateReconstructionDemo() {
+            const method = document.getElementById('reconstructionMethod').value;
+            const sampleCount = parseInt(document.getElementById('sampleCount').value);
+            const sincLength = parseInt(document.getElementById('sincLength').value);
+            
+            document.getElementById('sampleCountValue').textContent = sampleCount;
+            document.getElementById('sincLengthValue').textContent = sincLength;
+            
+            const reconstructionCanvas = document.getElementById('reconstructionCanvas');
+            const errorCanvas = document.getElementById('reconstructionErrorCanvas');
+            const reconstructionCtx = reconstructionCanvas.getContext('2d');
+            const errorCtx = errorCanvas.getContext('2d');
+            
+            // 绘制重构对比
+            drawAxis(reconstructionCtx, 600, 350, 't', 'x(t)');
+            drawReconstructionComparison(reconstructionCtx, method, sampleCount, sincLength);
+            
+            // 绘制误差分析
+            drawAxis(errorCtx, 600, 350, 't', '误差');
+            drawReconstructionError(errorCtx, method, sampleCount, sincLength);
+            
+            // 分析重构质量
+            analyzeReconstructionQuality(method, sampleCount, sincLength);
+        }
+        
+        function drawReconstructionComparison(ctx, method, sampleCount, sincLength) {
+            const centerX = 300;
+            const centerY = 175;
+            const scaleX = 80;
+            const scaleY = 60;
+            const fm = 2;
+            const fs = 10;
+            const Ts = 1 / fs;
+            
+            // 绘制原信号
+            ctx.strokeStyle = colors.info;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            
+            let first = true;
+            for (let t = -3; t <= 3; t += 0.01) {
+                const y = Math.sin(2 * Math.PI * fm * t);
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 绘制抽样点
+            ctx.fillStyle = colors.danger;
+            const samples = [];
+            for (let n = -sampleCount/2; n <= sampleCount/2; n++) {
+                const t = n * Ts;
+                if (Math.abs(t) <= 3) {
+                    const y = Math.sin(2 * Math.PI * fm * t);
+                    const x = centerX + t * scaleX;
+                    const plotY = centerY - y * scaleY;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, plotY, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    samples.push({t, y});
+                }
+            }
+            
+            // 绘制重构信号
+            ctx.strokeStyle = colors.success;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            first = true;
+            for (let t = -3; t <= 3; t += 0.02) {
+                const y = reconstructSignal(t, samples, method, Ts, sincLength);
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+            
+            // 图例
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('原信号(虚线)', 50, 30);
+            ctx.fillText('抽样点(红)', 150, 30);
+            ctx.fillText('重构信号(绿)', 250, 30);
+        }
+        
+        function reconstructSignal(t, samples, method, Ts, sincLength) {
+            let result = 0;
+            
+            switch(method) {
+                case 'ideal':
+                    // 理想重构（sinc插值）
+                    for (let sample of samples) {
+                        if (Math.abs(sample.t) <= sincLength * Ts / 2) {
+                            result += sample.y * sinc((t - sample.t) / Ts);
+                        }
+                    }
+                    break;
+                    
+                case 'zoh':
+                    // 零阶保持
+                    for (let i = 0; i < samples.length - 1; i++) {
+                        if (t >= samples[i].t && t < samples[i + 1].t) {
+                            result = samples[i].y;
+                            break;
+                        }
+                    }
+                    break;
+                    
+                case 'linear':
+                    // 线性插值
+                    for (let i = 0; i < samples.length - 1; i++) {
+                        if (t >= samples[i].t && t <= samples[i + 1].t) {
+                            const ratio = (t - samples[i].t) / (samples[i + 1].t - samples[i].t);
+                            result = samples[i].y + ratio * (samples[i + 1].y - samples[i].y);
+                            break;
+                        }
+                    }
+                    break;
+                    
+                case 'cubic':
+                    // 简化的三次插值
+                    result = linearInterpolation(t, samples);
+                    break;
+            }
+            
+            return result;
+        }
+        
+        function linearInterpolation(t, samples) {
+            for (let i = 0; i < samples.length - 1; i++) {
+                if (t >= samples[i].t && t <= samples[i + 1].t) {
+                    const ratio = (t - samples[i].t) / (samples[i + 1].t - samples[i].t);
+                    return samples[i].y + ratio * (samples[i + 1].y - samples[i].y);
+                }
+            }
+            return 0;
+        }
+        
+        function drawReconstructionError(ctx, method, sampleCount, sincLength) {
+            const centerX = 300;
+            const centerY = 175;
+            const scaleX = 80;
+            const scaleY = 200;
+            const fm = 2;
+            const fs = 10;
+            const Ts = 1 / fs;
+            
+            // 生成抽样点
+            const samples = [];
+            for (let n = -sampleCount/2; n <= sampleCount/2; n++) {
+                const t = n * Ts;
+                if (Math.abs(t) <= 3) {
+                    const y = Math.sin(2 * Math.PI * fm * t);
+                    samples.push({t, y});
+                }
+            }
+            
+            // 绘制误差曲线
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            let first = true;
+            let maxError = 0;
+            
+            for (let t = -3; t <= 3; t += 0.02) {
+                const original = Math.sin(2 * Math.PI * fm * t);
+                const reconstructed = reconstructSignal(t, samples, method, Ts, sincLength);
+                const error = original - reconstructed;
+                
+                maxError = Math.max(maxError, Math.abs(error));
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - error * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+            
+            // 显示最大误差
+            ctx.fillStyle = colors.danger;
+            ctx.font = '14px Arial';
+            ctx.fillText(`最大误差: ${maxError.toFixed(3)}`, 50, 30);
+        }
+        
+        function analyzeReconstructionQuality(method, sampleCount, sincLength) {
+            const analysis = document.getElementById('reconstructionAnalysis');
+            
+            let result = `<strong>重构质量分析:</strong><br>`;
+            result += `重构方法: ${method}<br>`;
+            result += `抽样点数: ${sampleCount}<br>`;
+            
+            switch(method) {
+                case 'ideal':
+                    result += `sinc截断长度: ${sincLength}<br>`;
+                    result += `优点: 理论上完美重构<br>`;
+                    result += `缺点: 需要无限长sinc函数`;
+                    break;
+                case 'zoh':
+                    result += `优点: 实现简单，实时性好<br>`;
+                    result += `缺点: 高频分量损失严重`;
+                    break;
+                case 'linear':
+                    result += `优点: 计算简单，连续性好<br>`;
+                    result += `缺点: 高频响应有限`;
+                    break;
+                case 'cubic':
+                    result += `优点: 平滑性好<br>`;
+                    result += `缺点: 计算复杂度较高`;
+                    break;
+            }
+            
+            analysis.innerHTML = result;
+        }
+        
+        // 实际抽样系统演示
+        function updateRealSamplingDemo() {
+            const signalType = document.getElementById('realSignal').value;
+            const filterType = document.getElementById('antiAliasFilter').value;
+            const samplingRate = parseInt(document.getElementById('realSamplingRate').value);
+            
+            document.getElementById('realSamplingRateValue').textContent = samplingRate;
+            
+            const inputCanvas = document.getElementById('realInputCanvas');
+            const filteredCanvas = document.getElementById('realFilteredCanvas');
+            const sampledCanvas = document.getElementById('realSampledCanvas');
+            
+            const inputCtx = inputCanvas.getContext('2d');
+            const filteredCtx = filteredCanvas.getContext('2d');
+            const sampledCtx = sampledCanvas.getContext('2d');
+            
+            // 绘制各阶段信号
+            drawAxis(inputCtx, 500, 200, 't', '输入');
+            drawRealSignal(inputCtx, signalType);
+            
+            drawAxis(filteredCtx, 500, 200, 't', '滤波后');
+            drawFilteredSignal(filteredCtx, signalType, filterType);
+            
+            drawAxis(sampledCtx, 500, 200, 't', '抽样后');
+            drawSampledSignal(sampledCtx, signalType, filterType, samplingRate);
+            
+            analyzeRealSampling(signalType, filterType, samplingRate);
+        }
+        
+        function drawRealSignal(ctx, signalType) {
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 2;
+            
+            const centerX = 250;
+            const centerY = 100;
+            const scaleX = 200;
+            const scaleY = 40;
+            
+            ctx.beginPath();
+            let first = true;
+            
+            for (let t = -1; t <= 1; t += 0.001) {
+                let y = 0;
+                
+                switch(signalType) {
+                    case 'music':
+                        // 模拟音乐信号（多频率分量）
+                        y = 0.5 * Math.sin(2 * Math.PI * 440 * t) + 
+                            0.3 * Math.sin(2 * Math.PI * 880 * t) + 
+                            0.2 * Math.sin(2 * Math.PI * 1320 * t);
+                        break;
+                    case 'speech':
+                        // 模拟语音信号
+                        y = Math.sin(2 * Math.PI * 300 * t) * (1 + 0.5 * Math.sin(2 * Math.PI * 50 * t));
+                        break;
+                    case 'noisy':
+                        // 含噪声信号
+                        y = Math.sin(2 * Math.PI * 100 * t) + 0.3 * (Math.random() - 0.5);
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawFilteredSignal(ctx, signalType, filterType) {
+            if (filterType === 'none') {
+                drawRealSignal(ctx, signalType);
+                return;
+            }
+            
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+            
+            // 简化的滤波效果演示
+            const centerX = 250;
+            const centerY = 100;
+            const scaleX = 200;
+            const scaleY = 40;
+            
+            ctx.beginPath();
+            let first = true;
+            
+            for (let t = -1; t <= 1; t += 0.001) {
+                let y = 0;
+                
+                switch(signalType) {
+                    case 'music':
+                        // 滤波后只保留低频分量
+                        y = 0.5 * Math.sin(2 * Math.PI * 440 * t) + 
+                            0.3 * Math.sin(2 * Math.PI * 880 * t);
+                        if (filterType === 'butterworth') {
+                            y *= 0.8; // 模拟滤波损失
+                        }
+                        break;
+                    case 'speech':
+                        y = Math.sin(2 * Math.PI * 300 * t) * (1 + 0.5 * Math.sin(2 * Math.PI * 50 * t));
+                        break;
+                    case 'noisy':
+                        // 滤波去除部分噪声
+                        y = Math.sin(2 * Math.PI * 100 * t);
+                        if (filterType === 'butterworth') {
+                            y += 0.1 * (Math.random() - 0.5);
+                        }
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawSampledSignal(ctx, signalType, filterType, samplingRate) {
+            const centerX = 250;
+            const centerY = 100;
+            const scaleX = 200;
+            const scaleY = 40;
+            const Ts = 1 / samplingRate;
+            
+            // 绘制抽样点
+            ctx.fillStyle = colors.danger;
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = 1;
+            
+            for (let n = Math.floor(-samplingRate); n <= samplingRate; n++) {
+                const t = n * Ts;
+                if (Math.abs(t) <= 1) {
+                    let y = 0;
+                    
+                    // 根据信号类型和滤波类型计算抽样值
+                    switch(signalType) {
+                        case 'music':
+                            y = 0.5 * Math.sin(2 * Math.PI * 440 * t) + 
+                                0.3 * Math.sin(2 * Math.PI * 880 * t);
+                            if (filterType === 'none') {
+                                y += 0.2 * Math.sin(2 * Math.PI * 1320 * t);
+                            }
+                            break;
+                        case 'speech':
+                            y = Math.sin(2 * Math.PI * 300 * t) * (1 + 0.5 * Math.sin(2 * Math.PI * 50 * t));
+                            break;
+                        case 'noisy':
+                            y = Math.sin(2 * Math.PI * 100 * t);
+                            if (filterType === 'none') {
+                                y += 0.3 * (Math.random() - 0.5);
+                            }
+                            break;
+                    }
+                    
+                    const x = centerX + t * scaleX;
+                    const plotY = centerY - y * scaleY;
+                    
+                    // 抽样点
+                    ctx.beginPath();
+                    ctx.arc(x, plotY, 2, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // 垂直线
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, plotY);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function analyzeRealSampling(signalType, filterType, samplingRate) {
+            const analysis = document.getElementById('realSamplingAnalysis');
+            
+            let result = `<strong>实际抽样系统分析:</strong><br>`;
+            result += `信号类型: ${signalType}<br>`;
+            result += `抗混叠滤波: ${filterType}<br>`;
+            result += `抽样率: ${samplingRate} Hz<br><br>`;
+            
+            let maxFreq = 0;
+            switch(signalType) {
+                case 'music':
+                    maxFreq = 1320;
+                    result += `最高频率分量: 1320 Hz<br>`;
+                    break;
+                case 'speech':
+                    maxFreq = 300;
+                    result += `最高频率分量: ~300 Hz<br>`;
+                    break;
+                case 'noisy':
+                    maxFreq = 100;
+                    result += `信号频率: 100 Hz<br>`;
+                    break;
+            }
+            
+            if (samplingRate >= 2 * maxFreq) {
+                result += `✅ 抽样率充足`;
+            } else {
+                result += `❌ 可能发生混叠`;
+            }
+            
+            if (filterType !== 'none') {
+                result += `<br>✅ 使用抗混叠滤波器`;
+            }
+            
+            analysis.innerHTML = result;
+        }
+        
+        // ADC演示
+        function updateADCDemo() {
+            const bits = parseInt(document.getElementById('adcBits').value);
+            const samplingRate = parseInt(document.getElementById('adcSamplingRate').value);
+            
+            document.getElementById('adcSamplingRateValue').textContent = samplingRate;
+            
+            const originalCanvas = document.getElementById('adcOriginalCanvas');
+            const quantizedCanvas = document.getElementById('adcQuantizedCanvas');
+            const originalCtx = originalCanvas.getContext('2d');
+            const quantizedCtx = quantizedCanvas.getContext('2d');
+            
+            // 绘制原始信号
+            drawAxis(originalCtx, 600, 250, 't', '原始信号');
+            drawADCOriginal(originalCtx);
+            
+            // 绘制量化后信号
+            drawAxis(quantizedCtx, 600, 250, 't', '量化信号');
+            drawADCQuantized(quantizedCtx, bits, samplingRate);
+            
+            analyzeADCPerformance(bits, samplingRate);
+        }
+        
+        function drawADCOriginal(ctx) {
+            ctx.strokeStyle = colors.info;
+            ctx.lineWidth = 2;
+            
+            const centerX = 300;
+            const centerY = 125;
+            const scaleX = 80;
+            const scaleY = 60;
+            
+            ctx.beginPath();
+            let first = true;
+            
+            for (let t = -3; t <= 3; t += 0.01) {
+                const y = Math.sin(2 * Math.PI * 0.5 * t) + 0.3 * Math.sin(2 * Math.PI * 2 * t);
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawADCQuantized(ctx, bits, samplingRate) {
+            const centerX = 300;
+            const centerY = 125;
+            const scaleX = 80;
+            const scaleY = 60;
+            const Ts = 1 / samplingRate;
+            const levels = Math.pow(2, bits);
+            const stepSize = 2 / levels;
+            
+            // 绘制量化级别线
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let level = -levels/2; level <= levels/2; level++) {
+                const y = level * stepSize;
+                const plotY = centerY - y * scaleY;
+                ctx.beginPath();
+                ctx.moveTo(50, plotY);
+                ctx.lineTo(550, plotY);
+                ctx.stroke();
+            }
+            
+            // 绘制量化后的信号
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = 2;
+            ctx.fillStyle = colors.danger;
+            
+            let prevX = null, prevY = null;
+            
+            for (let n = Math.floor(-3 * samplingRate); n <= 3 * samplingRate; n++) {
+                const t = n * Ts;
+                if (Math.abs(t) <= 3) {
+                    const originalY = Math.sin(2 * Math.PI * 0.5 * t) + 0.3 * Math.sin(2 * Math.PI * 2 * t);
+                    
+                    // 量化
+                    const quantizedLevel = Math.round(originalY / stepSize);
+                    const quantizedY = quantizedLevel * stepSize;
+                    
+                    const x = centerX + t * scaleX;
+                    const plotY = centerY - quantizedY * scaleY;
+                    
+                    // 抽样点
+                    ctx.beginPath();
+                    ctx.arc(x, plotY, 2, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // 连接线（阶梯状）
+                    if (prevX !== null) {
+                        ctx.beginPath();
+                        ctx.moveTo(prevX, prevY);
+                        ctx.lineTo(x, prevY);
+                        ctx.lineTo(x, plotY);
+                        ctx.stroke();
+                    }
+                    
+                    prevX = x;
+                    prevY = plotY;
+                }
+            }
+        }
+        
+        function analyzeADCPerformance(bits, samplingRate) {
+            const analysis = document.getElementById('adcAnalysis');
+            const levels = Math.pow(2, bits);
+            const snr = 6.02 * bits + 1.76; // 理论SNR
+            
+            let result = `<strong>ADC性能分析:</strong><br>`;
+            result += `分辨率: ${bits} 位<br>`;
+            result += `量化级别: ${levels}<br>`;
+            result += `抽样率: ${samplingRate} Hz<br>`;
+            result += `理论SNR: ${snr.toFixed(1)} dB<br>`;
+            result += `动态范围: ${(bits * 6.02).toFixed(1)} dB`;
+            
+            analysis.innerHTML = result;
+        }
+        
+        // 动画演示
+        function animateSampling() {
+            let fs = 1;
+            const maxFs = 50;
+            const fm = parseFloat(document.getElementById('signalFreq').value);
+            
+            const animate = () => {
+                document.getElementById('samplingFreq').value = fs;
+                updateSamplingDemo();
+                fs += 2;
+                
+                if (fs <= maxFs) {
+                    animationId = setTimeout(animate, 500);
+                }
+            };
+            
+            animate();
+        }
+        
+        // 练习题答案检查
+        function checkAnswer1() {
+            const answer = parseFloat(document.getElementById('answer1').value);
+            const feedback = document.getElementById('feedback1');
+            
+            if (Math.abs(answer - 10) < 0.1) {
+                feedback.textContent = '正确！根据抽样定理，fs ≥ 2fm = 2×5 = 10Hz。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。抽样定理要求fs ≥ 2fm，所以至少需要10Hz的抽样频率。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer2() {
+            const answer = document.getElementById('answer2').value;
+            const feedback = document.getElementById('feedback2');
+            
+            if (answer === 'aliasing_5hz') {
+                feedback.textContent = '正确！5Hz分量会混叠到8-5=3Hz，因为fs/2=4Hz，而5Hz>4Hz。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。抽样率8Hz的奈奎斯特频率是4Hz，5Hz分量会混叠到3Hz。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer3() {
+            const answer = document.getElementById('answer3').value;
+            const feedback = document.getElementById('feedback3');
+            
+            if (answer === 'sinc') {
+                feedback.textContent = '正确！理想重构使用sinc函数：x(t) = Σx(nTs)sinc((t-nTs)/Ts)。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。理想重构使用sinc函数进行插值，这是抽样定理的直接结果。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer4() {
+            const answer = document.getElementById('answer4').value;
+            const feedback = document.getElementById('feedback4');
+            
+            if (answer === 'human_hearing') {
+                feedback.textContent = '正确！人耳听觉范围约20kHz，44.1kHz = 2.205×20kHz，满足抽样定理。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。44.1kHz的选择主要是为了覆盖人耳20kHz的听觉范围，满足抽样定理。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer5() {
+            const answer = parseFloat(document.getElementById('answer5').value);
+            const feedback = document.getElementById('feedback5');
+            
+            // 为了1%的误差，通常需要10-20%的余量，所以约8.8-9.6kHz
+            if (answer >= 8.5 && answer <= 10) {
+                feedback.textContent = '正确！考虑到重构误差和实际滤波器特性，通常选择8.8-9.6kHz左右。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。理论最低8kHz，但实际需要考虑抗混叠滤波器和重构误差，约需8.8-9.6kHz。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        // 初始化
+        window.onload = function() {
+            updateSamplingDemo();
+            updateTheoremDemo();
+            updateReconstructionDemo();
+            updateRealSamplingDemo();
+            updateADCDemo();
+        };
+        
+        // 事件监听器
+        document.getElementById('signalFreq').addEventListener('input', updateSamplingDemo);
+        document.getElementById('samplingFreq').addEventListener('input', updateSamplingDemo);
+        document.getElementById('signalBandwidth').addEventListener('input', updateTheoremDemo);
+        document.getElementById('samplingRatio').addEventListener('input', updateTheoremDemo);
+        document.getElementById('sampleCount').addEventListener('input', updateReconstructionDemo);
+        document.getElementById('sincLength').addEventListener('input', updateReconstructionDemo);
+        document.getElementById('realSamplingRate').addEventListener('input', updateRealSamplingDemo);
+        document.getElementById('adcSamplingRate').addEventListener('input', updateADCDemo);
+    </script>
+</body>
+</html>

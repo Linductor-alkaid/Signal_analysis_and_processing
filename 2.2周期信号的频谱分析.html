@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>周期信号的频谱分析</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #6c5ce7 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #74b9ff, #6c5ce7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #74b9ff;
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            color: #0984e3;
+            margin-top: 25px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .formula {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1em;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+            text-align: center;
+        }
+        
+        .canvas-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        .signal-canvas {
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            margin: 10px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #4caf50;
+        }
+        
+        .controls label {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #81c784;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+        }
+        
+        .exercise {
+            background: #fff8e1;
+            border: 1px solid #ffcc02;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #f57f17;
+            margin-top: 0;
+        }
+        
+        .answer-input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 10px;
+            width: 200px;
+        }
+        
+        .feedback {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .key-points {
+            background: #e1f5fe;
+            border-left: 4px solid #0277bd;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .key-points h4 {
+            color: #01579b;
+            margin-top: 0;
+        }
+        
+        .spectrum-display {
+            background: #f3e5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #9c27b0;
+        }
+        
+        .fourier-demo {
+            background: #fce4ec;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #e91e63;
+        }
+        
+        .gibbs-demo {
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #ff9800;
+        }
+        
+        .orthogonal-demo {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4caf50;
+        }
+        
+        .coefficient-display {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        
+        ul li {
+            margin: 8px 0;
+        }
+        
+        .dual-canvas {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .math-expression {
+            font-size: 0.9em;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 周期信号的频谱分析</h1>
+        
+        <div class="section">
+            <h2>1. 正交函数与正交函数集</h2>
+            
+            <h3>1.1 正交函数的定义</h3>
+            <div class="formula">
+                两个函数f₁(t)和f₂(t)在区间[t₁, t₂]上正交：<br>
+                ∫_{t₁}^{t₂} f₁(t)f₂(t)dt = 0
+            </div>
+            
+            <h3>1.2 三角函数的正交性</h3>
+            <div class="formula">
+                ∫_{-T/2}^{T/2} cos(nΩt)cos(mΩt)dt = {T/2, n=m≠0; 0, n≠m}<br>
+                ∫_{-T/2}^{T₂} sin(nΩt)sin(mΩt)dt = {T/2, n=m≠0; 0, n≠m}<br>
+                ∫_{-T/2}^{T/2} sin(nΩt)cos(mΩt)dt = 0
+            </div>
+            
+            <div class="orthogonal-demo">
+                <h4>正交性可视化演示</h4>
+                <div class="controls">
+                    <label>n:</label>
+                    <input type="range" id="orthN" min="1" max="5" step="1" value="1">
+                    <span id="orthNValue">1</span>
+                    <label>m:</label>
+                    <input type="range" id="orthM" min="1" max="5" step="1" value="2">
+                    <span id="orthMValue">2</span>
+                    <button onclick="updateOrthogonality()">更新演示</button>
+                </div>
+                <div class="dual-canvas">
+                    <canvas id="orthogonalCanvas" class="signal-canvas" width="700" height="400"></canvas>
+                </div>
+                <div id="orthogonalResult" class="coefficient-display">积分结果将在这里显示</div>
+            </div>
+            
+            <div class="key-points">
+                <h4>正交函数的重要性质：</h4>
+                <ul>
+                    <li>正交函数集可以用来表示任意信号（类似向量的基）</li>
+                    <li>三角函数集{1, cos(Ωt), sin(Ωt), cos(2Ωt), sin(2Ωt), ...}是完备正交集</li>
+                    <li>正交性使得傅里叶系数的计算变得简单</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题1：</h4>
+                <p>函数cos(3t)和sin(2t)在区间[-π, π]上是否正交？</p>
+                <select id="answer1" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="yes">正交</option>
+                    <option value="no">不正交</option>
+                </select>
+                <button onclick="checkAnswer1()">提交答案</button>
+                <div id="feedback1" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>2. 傅里叶级数</h2>
+            
+            <h3>2.1 三角形式的傅里叶级数</h3>
+            <div class="formula">
+                x(t) = a₀ + Σ[aₙcos(nΩt) + bₙsin(nΩt)]<br><br>
+                其中：Ω = 2π/T，T为周期<br>
+                a₀ = (1/T)∫_{-T/2}^{T/2} x(t)dt<br>
+                aₙ = (2/T)∫_{-T/2}^{T/2} x(t)cos(nΩt)dt<br>
+                bₙ = (2/T)∫_{-T/2}^{T/2} x(t)sin(nΩt)dt
+            </div>
+            
+            <h3>2.2 指数形式的傅里叶级数</h3>
+            <div class="formula">
+                x(t) = Σ Cₙe^{jnΩt}<br><br>
+                Cₙ = (1/T)∫_{-T/2}^{T/2} x(t)e^{-jnΩt}dt<br><br>
+                与三角形式的关系：<br>
+                C₀ = a₀, Cₙ = (aₙ - jbₙ)/2, C₋ₙ = (aₙ + jbₙ)/2
+            </div>
+            
+            <div class="fourier-demo">
+                <h4>傅里叶级数合成演示</h4>
+                <div class="controls">
+                    <label>选择目标信号:</label>
+                    <select id="targetSignal" onchange="updateFourierSeries()">
+                        <option value="square">方波</option>
+                        <option value="sawtooth">锯齿波</option>
+                        <option value="triangle">三角波</option>
+                    </select>
+                    <label>谐波数N:</label>
+                    <input type="range" id="harmonicN" min="1" max="20" step="1" value="5">
+                    <span id="harmonicNValue">5</span>
+                    <button onclick="updateFourierSeries()">更新合成</button>
+                    <button onclick="animateFourierSeries()">动画演示</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="fourierTimeCanvas" class="signal-canvas" width="600" height="300"></canvas>
+                    <canvas id="fourierSpectrumCanvas" class="signal-canvas" width="600" height="300"></canvas>
+                </div>
+                <div id="fourierCoefficients" class="coefficient-display">傅里叶系数将在这里显示</div>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题2：</h4>
+                <p>周期为2π的方波信号f(t) = {1, 0≤t≤π; -1, π≤t≤2π}，其傅里叶级数中a₀的值是：</p>
+                <input type="number" id="answer2" class="answer-input" placeholder="输入答案" step="0.1">
+                <button onclick="checkAnswer2()">提交答案</button>
+                <div id="feedback2" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>3. 典型周期函数的傅里叶级数</h2>
+            
+            <h3>3.1 方波信号</h3>
+            <div class="formula">
+                方波 x(t) = {A, 0≤t≤T/2; -A, T/2≤t≤T}<br>
+                x(t) = (4A/π)Σ[sin((2n-1)Ωt)/(2n-1)]，n=1,2,3,...
+            </div>
+            
+            <h3>3.2 锯齿波信号</h3>
+            <div class="formula">
+                锯齿波 x(t) = (2A/T)t - A, 0≤t≤T<br>
+                x(t) = -(2A/π)Σ[sin(nΩt)/n]，n=1,2,3,...
+            </div>
+            
+            <h3>3.3 三角波信号</h3>
+            <div class="formula">
+                三角波的傅里叶级数：<br>
+                x(t) = (8A/π²)Σ[sin((2n-1)Ωt)/(2n-1)²]，n=1,2,3,...
+            </div>
+            
+            <div class="spectrum-display">
+                <h4>典型信号的频谱特性对比</h4>
+                <div class="controls">
+                    <label>信号类型:</label>
+                    <select id="spectrumSignal" onchange="updateSpectralComparison()">
+                        <option value="square">方波</option>
+                        <option value="sawtooth">锯齿波</option>
+                        <option value="triangle">三角波</option>
+                        <option value="all">全部对比</option>
+                    </select>
+                    <label>显示:</label>
+                    <select id="spectrumType" onchange="updateSpectralComparison()">
+                        <option value="amplitude">幅度谱</option>
+                        <option value="phase">相位谱</option>
+                        <option value="both">幅度+相位</option>
+                    </select>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="spectrumCompareCanvas" class="signal-canvas" width="800" height="400"></canvas>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>频谱特性总结：</h4>
+                <ul>
+                    <li><strong>方波</strong>：只含奇次谐波，幅度按1/n衰减</li>
+                    <li><strong>锯齿波</strong>：含所有谐波，幅度按1/n衰减</li>
+                    <li><strong>三角波</strong>：只含奇次谐波，幅度按1/n²衰减（收敛更快）</li>
+                    <li>信号越"尖锐"，高频分量越丰富</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题3：</h4>
+                <p>哪种信号的高频分量衰减最快？</p>
+                <select id="answer3" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="square">方波</option>
+                    <option value="sawtooth">锯齿波</option>
+                    <option value="triangle">三角波</option>
+                </select>
+                <button onclick="checkAnswer3()">提交答案</button>
+                <div id="feedback3" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>4. 吉布斯现象</h2>
+            
+            <h3>4.1 吉布斯现象的产生</h3>
+            <div class="key-points">
+                <h4>现象描述：</h4>
+                <ul>
+                    <li>用有限项傅里叶级数近似不连续信号时，在跳跃点附近出现过冲和振荡</li>
+                    <li>随着谐波数增加，振荡频率增加但过冲幅度不减少</li>
+                    <li>过冲约为跳跃幅度的9%（准确值为(π-2)/π × 100% ≈ 8.95%）</li>
+                </ul>
+            </div>
+            
+            <div class="gibbs-demo">
+                <h4>吉布斯现象演示</h4>
+                <div class="controls">
+                    <label>谐波数:</label>
+                    <input type="range" id="gibbsN" min="1" max="50" step="1" value="10">
+                    <span id="gibbsNValue">10</span>
+                    <label>信号类型:</label>
+                    <select id="gibbsSignal">
+                        <option value="square">方波</option>
+                        <option value="step">阶跃</option>
+                    </select>
+                    <button onclick="updateGibbsDemo()">更新演示</button>
+                    <button onclick="animateGibbs()">动画演示</button>
+                </div>
+                <canvas id="gibbsCanvas" class="signal-canvas" width="800" height="400"></canvas>
+                <div id="gibbsAnalysis" class="coefficient-display">过冲分析将在这里显示</div>
+            </div>
+            
+            <h3>4.2 吉布斯现象的数学解释</h3>
+            <div class="formula">
+                方波的部分和：S_N(t) = (4/π)Σ[sin((2n-1)t)/(2n-1)]<br><br>
+                在t=0处的过冲：lim_{t→0⁺} S_N(t) = (2/π)∫₀^π (sin(x)/x)dx ≈ 1.179
+            </div>
+            
+            <div class="key-points">
+                <h4>重要结论：</h4>
+                <ul>
+                    <li>吉布斯现象是傅里叶级数的固有特性，不能通过增加项数消除</li>
+                    <li>只能通过窗函数等技术减轻，但会影响逼近精度</li>
+                    <li>在信号处理中需要权衡精度和振荡之间的关系</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题4：</h4>
+                <p>吉布斯现象中，过冲约占跳跃幅度的百分比是：</p>
+                <input type="number" id="answer4" class="answer-input" placeholder="输入百分比" step="0.1">
+                <span class="math-expression">%</span>
+                <button onclick="checkAnswer4()">提交答案</button>
+                <div id="feedback4" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>5. 频谱的物理意义</h2>
+            
+            <div class="spectrum-display">
+                <h4>互动频谱分析器</h4>
+                <div class="controls">
+                    <label>基频f₀:</label>
+                    <input type="range" id="fundamentalFreq" min="0.5" max="3" step="0.1" value="1">
+                    <span id="fundamentalFreqValue">1</span> Hz
+                    <label>占空比:</label>
+                    <input type="range" id="dutyCycle" min="0.1" max="0.9" step="0.1" value="0.5">
+                    <span id="dutyCycleValue">0.5</span>
+                    <button onclick="updateInteractiveSpectrum()">更新分析</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="interactiveTimeCanvas" class="signal-canvas" width="600" height="250"></canvas>
+                    <canvas id="interactiveSpectrumCanvas" class="signal-canvas" width="600" height="250"></canvas>
+                </div>
+                <div id="spectrumAnalysis" class="coefficient-display">频谱分析结果</div>
+            </div>
+            
+            <div class="key-points">
+                <h4>频谱分析的意义：</h4>
+                <ul>
+                    <li><strong>频域观点</strong>：将信号分解为不同频率的正弦波分量</li>
+                    <li><strong>带宽概念</strong>：信号的主要能量集中在哪些频率范围</li>
+                    <li><strong>滤波设计</strong>：根据频谱特性设计合适的滤波器</li>
+                    <li><strong>系统分析</strong>：通过频率响应分析系统特性</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 本章小结</h2>
+            <div class="key-points">
+                <h4>核心要点：</h4>
+                <ul>
+                    <li><strong>正交函数</strong>：是傅里叶级数的数学基础，三角函数集具有正交性</li>
+                    <li><strong>傅里叶级数</strong>：将周期信号表示为谐波分量的叠加，有三角和指数两种形式</li>
+                    <li><strong>典型信号</strong>：方波、锯齿波、三角波的频谱特性各有特点</li>
+                    <li><strong>吉布斯现象</strong>：有限项逼近不连续信号时的固有现象，需要了解其成因和影响</li>
+                    <li><strong>频谱意义</strong>：从频域角度理解信号的组成和特性</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🎯 综合练习：</h4>
+                <p>一个周期方波信号，如果要使其傅里叶级数近似的误差小于5%，至少需要保留前几项？</p>
+                <input type="number" id="answer5" class="answer-input" placeholder="输入项数">
+                <button onclick="checkAnswer5()">提交答案</button>
+                <div id="feedback5" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let animationId;
+        const colors = {
+            primary: '#74b9ff',
+            secondary: '#0984e3',
+            accent: '#6c5ce7',
+            success: '#00b894',
+            warning: '#fdcb6e',
+            danger: '#e17055'
+        };
+        
+        // 绘图工具函数
+        function drawAxis(ctx, width, height, xLabel = 't', yLabel = 'x(t)', showGrid = true) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const margin = 40;
+            
+            if (showGrid) {
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.lineWidth = 0.5;
+                for (let i = margin; i < width - margin; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, margin);
+                    ctx.lineTo(i, height - margin);
+                    ctx.stroke();
+                }
+                for (let i = margin; i < height - margin; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(margin, i);
+                    ctx.lineTo(width - margin, i);
+                    ctx.stroke();
+                }
+            }
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(margin, centerY);
+            ctx.lineTo(width - margin, centerY);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(centerX, margin);
+            ctx.lineTo(centerX, height - margin);
+            ctx.stroke();
+            
+            // 箭头
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(width - margin, centerY);
+            ctx.lineTo(width - margin - 8, centerY - 4);
+            ctx.lineTo(width - margin - 8, centerY + 4);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, margin);
+            ctx.lineTo(centerX - 4, margin + 8);
+            ctx.lineTo(centerX + 4, margin + 8);
+            ctx.fill();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText(xLabel, width - margin + 10, centerY + 5);
+            ctx.fillText(yLabel, centerX + 10, margin - 5);
+            ctx.fillText('0', centerX + 5, centerY + 15);
+        }
+        
+        function drawFrequencyAxis(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            const margin = 40;
+            const centerY = height - margin;
+            
+            // X轴（频率轴）
+            ctx.beginPath();
+            ctx.moveTo(margin, centerY);
+            ctx.lineTo(width - margin, centerY);
+            ctx.stroke();
+            
+            // Y轴（幅度轴）
+            ctx.beginPath();
+            ctx.moveTo(margin, margin);
+            ctx.lineTo(margin, centerY);
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('f (Hz)', width - margin + 10, centerY + 5);
+            ctx.fillText('|X(f)|', margin - 30, margin - 5);
+            ctx.fillText('0', margin - 10, centerY + 15);
+        }
+        
+        // 正交性演示
+        function updateOrthogonality() {
+            const n = parseInt(document.getElementById('orthN').value);
+            const m = parseInt(document.getElementById('orthM').value);
+            document.getElementById('orthNValue').textContent = n;
+            document.getElementById('orthMValue').textContent = m;
+            
+            const canvas = document.getElementById('orthogonalCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清空并分成三个子图
+            ctx.clearRect(0, 0, 700, 400);
+            
+            // 绘制三个函数
+            const T = 4; // 周期
+            const omega = 2 * Math.PI / T;
+            
+            // 子图1: cos(nΩt)
+            drawSubplotAxis(ctx, 0, 0, 700, 120, `cos(${n}Ωt)`);
+            drawCosine(ctx, 0, 0, 700, 120, n, omega, colors.primary);
+            
+            // 子图2: cos(mΩt)
+            drawSubplotAxis(ctx, 0, 140, 700, 120, `cos(${m}Ωt)`);
+            drawCosine(ctx, 0, 140, 700, 120, m, omega, colors.secondary);
+            
+            // 子图3: 乘积
+            drawSubplotAxis(ctx, 0, 280, 700, 120, `cos(${n}Ωt)·cos(${m}Ωt)`);
+            drawProduct(ctx, 0, 280, 700, 120, n, m, omega);
+            
+            // 计算积分
+            const integral = calculateOrthogonalityIntegral(n, m, T);
+            document.getElementById('orthogonalResult').innerHTML = `
+                ∫₍₋T/₂₎^₍T/₂₎ cos(${n}Ωt)cos(${m}Ωt)dt = ${integral.toFixed(3)}<br>
+                结论: ${Math.abs(integral) < 0.001 ? '正交' : '不正交'}
+            `;
+        }
+        
+        function drawSubplotAxis(ctx, x, y, width, height, title) {
+            const centerY = y + height / 2;
+            const centerX = x + width / 2;
+            const margin = 30;
+            
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(x + margin, centerY);
+            ctx.lineTo(x + width - margin, centerY);
+            ctx.stroke();
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText(title, x + margin, y + 15);
+        }
+        
+        function drawCosine(ctx, x, y, width, height, n, omega, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            const centerY = y + height / 2;
+            const margin = 30;
+            const scaleX = (width - 2 * margin) / 4; // 显示2个周期
+            const scaleY = (height - 20) / 4;
+            
+            ctx.beginPath();
+            for (let t = -2; t <= 2; t += 0.02) {
+                const plotX = x + margin + (t + 2) * scaleX / 4 * (width - 2 * margin);
+                const plotY = centerY - Math.cos(n * omega * t) * scaleY;
+                
+                if (t === -2) {
+                    ctx.moveTo(plotX, plotY);
+                } else {
+                    ctx.lineTo(plotX, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawProduct(ctx, x, y, width, height, n, m, omega) {
+            ctx.strokeStyle = colors.accent;
+            ctx.lineWidth = 2;
+            
+            const centerY = y + height / 2;
+            const margin = 30;
+            const scaleX = (width - 2 * margin) / 4;
+            const scaleY = (height - 20) / 4;
+            
+            ctx.beginPath();
+            for (let t = -2; t <= 2; t += 0.02) {
+                const plotX = x + margin + (t + 2) * scaleX / 4 * (width - 2 * margin);
+                const product = Math.cos(n * omega * t) * Math.cos(m * omega * t);
+                const plotY = centerY - product * scaleY;
+                
+                if (t === -2) {
+                    ctx.moveTo(plotX, plotY);
+                } else {
+                    ctx.lineTo(plotX, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function calculateOrthogonalityIntegral(n, m, T) {
+            if (n === m) {
+                return T / 2;
+            } else {
+                return 0; // 理论值
+            }
+        }
+        
+        // 傅里叶级数演示
+        function updateFourierSeries() {
+            const signal = document.getElementById('targetSignal').value;
+            const N = parseInt(document.getElementById('harmonicN').value);
+            document.getElementById('harmonicNValue').textContent = N;
+            
+            const timeCanvas = document.getElementById('fourierTimeCanvas');
+            const spectrumCanvas = document.getElementById('fourierSpectrumCanvas');
+            const timeCtx = timeCanvas.getContext('2d');
+            const specCtx = spectrumCanvas.getContext('2d');
+            
+            // 绘制时域图
+            drawAxis(timeCtx, 600, 300, 't', 'x(t)');
+            drawFourierTimeDomain(timeCtx, signal, N);
+            
+            // 绘制频谱图
+            drawFrequencyAxis(specCtx, 600, 300);
+            drawFourierSpectrum(specCtx, signal, N);
+            
+            // 显示系数
+            displayFourierCoefficients(signal, N);
+        }
+        
+        function drawFourierTimeDomain(ctx, signalType, N) {
+            const centerX = 300;
+            const centerY = 150;
+            const scaleX = 50;
+            const scaleY = 60;
+            const T = 4; // 周期
+            const omega = 2 * Math.PI / T;
+            
+            // 绘制原信号（虚线）
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            drawOriginalSignal(ctx, signalType, centerX, centerY, scaleX, scaleY, T);
+            ctx.setLineDash([]);
+            
+            // 绘制傅里叶级数近似（实线）
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 3;
+            drawFourierApproximation(ctx, signalType, N, centerX, centerY, scaleX, scaleY, omega);
+        }
+        
+        function drawOriginalSignal(ctx, signalType, centerX, centerY, scaleX, scaleY, T) {
+            ctx.beginPath();
+            
+            for (let t = -T; t <= T; t += 0.02) {
+                let y = 0;
+                const tMod = ((t % T) + T) % T; // 确保正值
+                
+                switch(signalType) {
+                    case 'square':
+                        y = (tMod < T/2) ? 1 : -1;
+                        break;
+                    case 'sawtooth':
+                        y = (2 * tMod / T) - 1;
+                        break;
+                    case 'triangle':
+                        y = (tMod < T/2) ? (4 * tMod / T) - 1 : 3 - (4 * tMod / T);
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -T) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawFourierApproximation(ctx, signalType, N, centerX, centerY, scaleX, scaleY, omega) {
+            ctx.beginPath();
+            
+            for (let t = -2; t <= 2; t += 0.01) {
+                let y = 0;
+                
+                // 计算傅里叶级数
+                switch(signalType) {
+                    case 'square':
+                        for (let n = 1; n <= N; n += 2) { // 只有奇次谐波
+                            y += (4 / Math.PI) * Math.sin(n * omega * t) / n;
+                        }
+                        break;
+                    case 'sawtooth':
+                        for (let n = 1; n <= N; n++) {
+                            y -= (2 / Math.PI) * Math.sin(n * omega * t) / n;
+                        }
+                        break;
+                    case 'triangle':
+                        for (let n = 1; n <= N; n += 2) { // 只有奇次谐波
+                            y += (8 / (Math.PI * Math.PI)) * Math.sin(n * omega * t) / (n * n);
+                        }
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -2) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawFourierSpectrum(ctx, signalType, N) {
+            const margin = 40;
+            const width = 600;
+            const height = 300;
+            const centerY = height - margin;
+            const maxFreq = N;
+            const freqScale = (width - 2 * margin) / (2 * maxFreq);
+            const ampScale = (height - 2 * margin) / 2;
+            
+            // 绘制频谱线
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 3;
+            
+            for (let n = 1; n <= N; n++) {
+                let amplitude = 0;
+                
+                switch(signalType) {
+                    case 'square':
+                        if (n % 2 === 1) { // 奇次谐波
+                            amplitude = 4 / (Math.PI * n);
+                        }
+                        break;
+                    case 'sawtooth':
+                        amplitude = 2 / (Math.PI * n);
+                        break;
+                    case 'triangle':
+                        if (n % 2 === 1) { // 奇次谐波
+                            amplitude = 8 / (Math.PI * Math.PI * n * n);
+                        }
+                        break;
+                }
+                
+                if (amplitude > 0) {
+                    const x = margin + n * freqScale;
+                    const lineHeight = amplitude * ampScale * 50; // 放大显示
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, centerY - lineHeight);
+                    ctx.stroke();
+                    
+                    // 绘制频率标签
+                    ctx.fillStyle = '#333';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(n.toString(), x - 5, centerY + 15);
+                }
+            }
+        }
+        
+        function displayFourierCoefficients(signalType, N) {
+            let html = `<strong>${signalType}信号的傅里叶系数（前${N}项）:</strong><br>`;
+            
+            for (let n = 1; n <= Math.min(N, 5); n++) { // 只显示前5项
+                let an = 0, bn = 0;
+                
+                switch(signalType) {
+                    case 'square':
+                        if (n % 2 === 1) {
+                            bn = 4 / (Math.PI * n);
+                        }
+                        break;
+                    case 'sawtooth':
+                        bn = -2 / (Math.PI * n);
+                        break;
+                    case 'triangle':
+                        if (n % 2 === 1) {
+                            bn = 8 / (Math.PI * Math.PI * n * n);
+                        }
+                        break;
+                }
+                
+                if (an !== 0 || bn !== 0) {
+                    html += `n=${n}: a${n}=${an.toFixed(4)}, b${n}=${bn.toFixed(4)}<br>`;
+                }
+            }
+            
+            document.getElementById('fourierCoefficients').innerHTML = html;
+        }
+        
+        // 频谱对比
+        function updateSpectralComparison() {
+            const signal = document.getElementById('spectrumSignal').value;
+            const type = document.getElementById('spectrumType').value;
+            
+            const canvas = document.getElementById('spectrumCompareCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (signal === 'all') {
+                drawAllSpectra(ctx, type);
+            } else {
+                drawSingleSpectrum(ctx, signal, type);
+            }
+        }
+        
+        function drawAllSpectra(ctx, type) {
+            ctx.clearRect(0, 0, 800, 400);
+            drawFrequencyAxis(ctx, 800, 400);
+            
+            const signals = ['square', 'sawtooth', 'triangle'];
+            const colors = ['#e74c3c', '#27ae60', '#3498db'];
+            const N = 10;
+            
+            // 绘制图例
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('红: 方波  绿: 锯齿波  蓝: 三角波', 60, 30);
+            
+            signals.forEach((signal, index) => {
+                drawSpectrumBars(ctx, signal, N, colors[index], type);
+            });
+        }
+        
+        function drawSingleSpectrum(ctx, signal, type) {
+            ctx.clearRect(0, 0, 800, 400);
+            drawFrequencyAxis(ctx, 800, 400);
+            
+            const N = 15;
+            drawSpectrumBars(ctx, signal, N, colors.primary, type);
+        }
+        
+        function drawSpectrumBars(ctx, signalType, N, color, displayType) {
+            const margin = 40;
+            const width = 800;
+            const height = 400;
+            const centerY = height - margin;
+            const freqScale = (width - 2 * margin) / N;
+            const ampScale = (height - 2 * margin) / 2;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            for (let n = 1; n <= N; n++) {
+                let amplitude = 0;
+                let phase = 0;
+                
+                switch(signalType) {
+                    case 'square':
+                        if (n % 2 === 1) {
+                            amplitude = 4 / (Math.PI * n);
+                            phase = Math.PI / 2; // 正弦分量
+                        }
+                        break;
+                    case 'sawtooth':
+                        amplitude = 2 / (Math.PI * n);
+                        phase = -Math.PI / 2; // 负正弦分量
+                        break;
+                    case 'triangle':
+                        if (n % 2 === 1) {
+                            amplitude = 8 / (Math.PI * Math.PI * n * n);
+                            phase = Math.PI / 2;
+                        }
+                        break;
+                }
+                
+                if (amplitude > 0) {
+                    const x = margin + (n - 0.5) * freqScale;
+                    
+                    if (displayType === 'amplitude' || displayType === 'both') {
+                        const lineHeight = amplitude * ampScale * 100;
+                        ctx.beginPath();
+                        ctx.moveTo(x, centerY);
+                        ctx.lineTo(x, centerY - lineHeight);
+                        ctx.stroke();
+                    }
+                    
+                    if (displayType === 'phase' || displayType === 'both') {
+                        // 绘制相位（用不同颜色的点表示）
+                        ctx.fillStyle = phase > 0 ? '#e74c3c' : '#3498db';
+                        ctx.beginPath();
+                        ctx.arc(x, centerY - 20, 3, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+        
+        // 吉布斯现象演示
+        function updateGibbsDemo() {
+            const N = parseInt(document.getElementById('gibbsN').value);
+            const signal = document.getElementById('gibbsSignal').value;
+            document.getElementById('gibbsNValue').textContent = N;
+            
+            const canvas = document.getElementById('gibbsCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            drawAxis(ctx, 800, 400, 't', 'x(t)');
+            drawGibbsComparison(ctx, signal, N);
+            analyzeGibbsOvershoot(signal, N);
+        }
+        
+        function drawGibbsComparison(ctx, signalType, N) {
+            const centerX = 400;
+            const centerY = 200;
+            const scaleX = 80;
+            const scaleY = 80;
+            const omega = 2 * Math.PI;
+            
+            // 绘制原信号
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            drawIdealSignal(ctx, signalType, centerX, centerY, scaleX, scaleY);
+            ctx.setLineDash([]);
+            
+            // 绘制有限项近似
+            ctx.strokeStyle = colors.danger;
+            ctx.lineWidth = 3;
+            drawGibbsApproximation(ctx, signalType, N, centerX, centerY, scaleX, scaleY, omega);
+            
+            // 标记过冲点
+            markOvershoot(ctx, signalType, N, centerX, centerY, scaleX, scaleY, omega);
+        }
+        
+        function drawIdealSignal(ctx, signalType, centerX, centerY, scaleX, scaleY) {
+            ctx.beginPath();
+            
+            for (let t = -2; t <= 2; t += 0.01) {
+                let y = 0;
+                
+                switch(signalType) {
+                    case 'square':
+                        y = (Math.sin(t) >= 0) ? 1 : -1;
+                        break;
+                    case 'step':
+                        y = (t >= 0) ? 1 : 0;
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -2) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawGibbsApproximation(ctx, signalType, N, centerX, centerY, scaleX, scaleY, omega) {
+            ctx.beginPath();
+            
+            for (let t = -2; t <= 2; t += 0.005) {
+                let y = 0;
+                
+                switch(signalType) {
+                    case 'square':
+                        for (let n = 1; n <= N; n += 2) {
+                            y += (4 / Math.PI) * Math.sin(n * omega * t) / n;
+                        }
+                        break;
+                    case 'step':
+                        y = 0.5; // 直流分量
+                        for (let n = 1; n <= N; n += 2) {
+                            y += (2 / Math.PI) * Math.sin(n * omega * t) / n;
+                        }
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -2) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function markOvershoot(ctx, signalType, N, centerX, centerY, scaleX, scaleY, omega) {
+            // 找到过冲点并标记
+            let maxOvershoot = 0;
+            let overshootPosition = 0;
+            
+            for (let t = 0; t <= 0.5; t += 0.001) {
+                let y = 0;
+                
+                switch(signalType) {
+                    case 'square':
+                        for (let n = 1; n <= N; n += 2) {
+                            y += (4 / Math.PI) * Math.sin(n * omega * t) / n;
+                        }
+                        break;
+                    case 'step':
+                        y = 0.5;
+                        for (let n = 1; n <= N; n += 2) {
+                            y += (2 / Math.PI) * Math.sin(n * omega * t) / n;
+                        }
+                        break;
+                }
+                
+                if (Math.abs(y) > maxOvershoot) {
+                    maxOvershoot = Math.abs(y);
+                    overshootPosition = t;
+                }
+            }
+            
+            // 绘制过冲标记
+            ctx.fillStyle = colors.danger;
+            ctx.beginPath();
+            ctx.arc(centerX + overshootPosition * scaleX, centerY - maxOvershoot * scaleY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        function analyzeGibbsOvershoot(signalType, N) {
+            const theoretical = 1.179; // 理论过冲值
+            const percentage = ((theoretical - 1) / 1 * 100).toFixed(1);
+            
+            document.getElementById('gibbsAnalysis').innerHTML = `
+                <strong>吉布斯现象分析 (N=${N}):</strong><br>
+                理论过冲幅度: ${theoretical.toFixed(3)}<br>
+                过冲百分比: ${percentage}%<br>
+                结论: 无论N多大，过冲都不会消失
+            `;
+        }
+        
+        // 交互式频谱分析
+        function updateInteractiveSpectrum() {
+            const f0 = parseFloat(document.getElementById('fundamentalFreq').value);
+            const duty = parseFloat(document.getElementById('dutyCycle').value);
+            document.getElementById('fundamentalFreqValue').textContent = f0;
+            document.getElementById('dutyCycleValue').textContent = duty;
+            
+            const timeCanvas = document.getElementById('interactiveTimeCanvas');
+            const specCanvas = document.getElementById('interactiveSpectrumCanvas');
+            const timeCtx = timeCanvas.getContext('2d');
+            const specCtx = specCanvas.getContext('2d');
+            
+            // 绘制时域波形
+            drawAxis(timeCtx, 600, 250, 't(s)', 'x(t)');
+            drawPulseWave(timeCtx, f0, duty);
+            
+            // 绘制频谱
+            drawFrequencyAxis(specCtx, 600, 250);
+            drawPulseSpectrum(specCtx, f0, duty);
+            
+            // 分析结果
+            analyzeSpectrum(f0, duty);
+        }
+        
+        function drawPulseWave(ctx, f0, duty) {
+            const centerX = 300;
+            const centerY = 125;
+            const scaleX = 100;
+            const scaleY = 60;
+            const T = 1 / f0;
+            
+            ctx.strokeStyle = colors.primary;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let t = -2 * T; t <= 2 * T; t += 0.001) {
+                const tMod = ((t % T) + T) % T;
+                const y = (tMod < duty * T) ? 1 : 0;
+                
+                const x = centerX + t * scaleX * f0;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -2 * T) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function drawPulseSpectrum(ctx, f0, duty) {
+            const margin = 40;
+            const width = 600;
+            const height = 250;
+            const centerY = height - margin;
+            const maxHarmonic = 20;
+            const freqScale = (width - 2 * margin) / (maxHarmonic * f0);
+            
+            ctx.strokeStyle = colors.secondary;
+            ctx.lineWidth = 2;
+            
+            for (let n = 1; n <= maxHarmonic; n++) {
+                const freq = n * f0;
+                const amplitude = Math.abs(duty * sinc(n * duty));
+                
+                if (amplitude > 0.01) { // 只显示幅度大于阈值的分量
+                    const x = margin + freq * freqScale;
+                    const lineHeight = amplitude * (height - 2 * margin) * 100;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, centerY - lineHeight);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        function sinc(x) {
+            return (x === 0) ? 1 : Math.sin(Math.PI * x) / (Math.PI * x);
+        }
+        
+        function analyzeSpectrum(f0, duty) {
+            const bandwidth = 1 / duty / f0; // 主瓣带宽
+            const nullFreq = 1 / duty; // 第一个零点频率
+            
+            document.getElementById('spectrumAnalysis').innerHTML = `
+                <strong>频谱分析结果:</strong><br>
+                基频 f₀ = ${f0} Hz<br>
+                占空比 = ${duty}<br>
+                主瓣带宽 ≈ ${bandwidth.toFixed(1)} × f₀<br>
+                第一零点频率 = ${nullFreq.toFixed(1)} Hz<br>
+                结论: 占空比越小，频谱越宽
+            `;
+        }
+        
+        // 动画函数
+        function animateFourierSeries() {
+            let n = 1;
+            const maxN = 20;
+            
+            const animate = () => {
+                document.getElementById('harmonicN').value = n;
+                updateFourierSeries();
+                n++;
+                
+                if (n <= maxN) {
+                    animationId = setTimeout(animate, 300);
+                }
+            };
+            
+            animate();
+        }
+        
+        function animateGibbs() {
+            let n = 1;
+            const maxN = 50;
+            
+            const animate = () => {
+                document.getElementById('gibbsN').value = n;
+                updateGibbsDemo();
+                n += 2;
+                
+                if (n <= maxN) {
+                    animationId = setTimeout(animate, 200);
+                }
+            };
+            
+            animate();
+        }
+        
+        // 练习题答案检查
+        function checkAnswer1() {
+            const answer = document.getElementById('answer1').value;
+            const feedback = document.getElementById('feedback1');
+            
+            if (answer === 'yes') {
+                feedback.textContent = '正确！cos(3t)和sin(2t)在任何区间上都正交，因为一个是余弦一个是正弦。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。cos(3t)和sin(2t)是正交的，因为余弦和正弦函数在任何完整周期上的积分都为0。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer2() {
+            const answer = parseFloat(document.getElementById('answer2').value);
+            const feedback = document.getElementById('feedback2');
+            
+            if (Math.abs(answer - 0) < 0.01) {
+                feedback.textContent = '正确！方波的平均值为0，所以a₀ = 0。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。方波在一个周期内正负部分相等，平均值为0，所以a₀ = 0。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer3() {
+            const answer = document.getElementById('answer3').value;
+            const feedback = document.getElementById('feedback3');
+            
+            if (answer === 'triangle') {
+                feedback.textContent = '正确！三角波的系数按1/n²衰减，比方波和锯齿波的1/n衰减更快。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。三角波的傅里叶系数按1/n²衰减，是三种信号中衰减最快的。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer4() {
+            const answer = parseFloat(document.getElementById('answer4').value);
+            const feedback = document.getElementById('feedback4');
+            
+            if (Math.abs(answer - 8.95) < 1) {
+                feedback.textContent = '正确！吉布斯现象的过冲约为(π-2)/π × 100% ≈ 8.95%。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。吉布斯现象的过冲为(π-2)/π × 100% ≈ 8.95%。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer5() {
+            const answer = parseInt(document.getElementById('answer5').value);
+            const feedback = document.getElementById('feedback5');
+            
+            if (answer >= 5 && answer <= 7) {
+                feedback.textContent = '正确！通常需要保留前5-7项才能使误差小于5%。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。对于方波，通常需要保留前5-7项傅里叶级数才能使误差小于5%。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        // 初始化
+        window.onload = function() {
+            updateOrthogonality();
+            updateFourierSeries();
+            updateSpectralComparison();
+            updateGibbsDemo();
+            updateInteractiveSpectrum();
+        };
+        
+        // 事件监听器
+        document.getElementById('orthN').addEventListener('input', updateOrthogonality);
+        document.getElementById('orthM').addEventListener('input', updateOrthogonality);
+        document.getElementById('harmonicN').addEventListener('input', updateFourierSeries);
+        document.getElementById('targetSignal').addEventListener('change', updateFourierSeries);
+        document.getElementById('gibbsN').addEventListener('input', updateGibbsDemo);
+        document.getElementById('gibbsSignal').addEventListener('change', updateGibbsDemo);
+        document.getElementById('fundamentalFreq').addEventListener('input', updateInteractiveSpectrum);
+        document.getElementById('dutyCycle').addEventListener('input', updateInteractiveSpectrum);
+    </script>
+</body>
+</html>

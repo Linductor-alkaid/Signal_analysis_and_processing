@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离散时间信号</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 第一章：离散时间信号</h1>
+        
+        <h2>1.1 离散时间信号（序列）的概念</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本定义</h3>
+            <p><strong>离散时间信号</strong>（也称为序列）是只在离散时间点上有定义的信号。通常表示为：</p>
+            <div class="formula">
+                x[n] = x(nT), n = ..., -2, -1, 0, 1, 2, ...
+            </div>
+            <p>其中：</p>
+            <ul>
+                <li><strong>n</strong>：整数时间索引</li>
+                <li><strong>T</strong>：采样周期</li>
+                <li><strong>x[n]</strong>：在时间索引n处的信号值</li>
+            </ul>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>序列的表示方法</h3>
+            <p>序列可以用以下几种方式表示：</p>
+            <ol>
+                <li><strong>函数表示法</strong>：x[n] = f(n)</li>
+                <li><strong>图形表示法</strong>：用茎状图（stem plot）表示</li>
+                <li><strong>表格表示法</strong>：列出各个时间点的值</li>
+                <li><strong>序列表示法</strong>：{..., x[-1], x[0], x[1], ...}</li>
+            </ol>
+        </div>
+        
+        <div class="plot-container">
+            <h3>序列可视化示例</h3>
+            <canvas id="sequencePlot" width="600" height="300"></canvas>
+            <div class="controls">
+                <label>选择序列类型：</label>
+                <select id="sequenceType">
+                    <option value="custom">自定义序列</option>
+                    <option value="unit_step">单位阶跃序列</option>
+                    <option value="unit_impulse">单位冲激序列</option>
+                    <option value="exponential">指数序列</option>
+                    <option value="sinusoid">正弦序列</option>
+                </select>
+                <button onclick="plotSequence()">绘制序列</button>
+            </div>
+        </div>
+        
+        <h2>1.2 序列的运算</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本运算</h3>
+            
+            <h4>1. 序列相加</h4>
+            <div class="formula">
+                y[n] = x₁[n] + x₂[n]
+            </div>
+            <p>两个序列对应元素相加</p>
+            
+            <h4>2. 序列相乘</h4>
+            <div class="formula">
+                y[n] = x₁[n] × x₂[n]
+            </div>
+            <p>两个序列对应元素相乘</p>
+            
+            <h4>3. 标量乘法</h4>
+            <div class="formula">
+                y[n] = a × x[n]
+            </div>
+            <p>序列的每个元素乘以常数a</p>
+            
+            <h4>4. 时移（延迟/超前）</h4>
+            <div class="formula">
+                y[n] = x[n - n₀]
+            </div>
+            <p>n₀ > 0：延迟n₀个单位<br>n₀ < 0：超前|n₀|个单位</p>
+            
+            <h4>5. 时间反转</h4>
+            <div class="formula">
+                y[n] = x[-n]
+            </div>
+            <p>序列关于n=0轴反转</p>
+            
+            <h4>6. 时间尺度变换</h4>
+            <div class="formula">
+                y[n] = x[Mn] （抽取，M为正整数）
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>序列运算可视化</h3>
+            <canvas id="operationPlot1" width="280" height="200"></canvas>
+            <canvas id="operationPlot2" width="280" height="200"></canvas>
+            <canvas id="operationResult" width="280" height="200"></canvas>
+            <div class="controls">
+                <label>运算类型：</label>
+                <select id="operationType">
+                    <option value="add">相加</option>
+                    <option value="multiply">相乘</option>
+                    <option value="shift">时移</option>
+                    <option value="reverse">时间反转</option>
+                </select>
+                <label>时移量：</label>
+                <input type="number" id="shiftAmount" value="2" min="-5" max="5">
+                <button onclick="performOperation()">执行运算</button>
+            </div>
+        </div>
+        
+        <h2>1.3 基本序列</h2>
+        
+        <div class="knowledge-point">
+            <h3>1. 单位冲激序列（Unit Impulse Sequence）</h3>
+            <div class="formula">
+                δ[n] = {1, n = 0; 0, n ≠ 0}
+            </div>
+            <p>只在n=0处值为1，其他地方都为0的序列</p>
+            
+            <div class="example">
+                <strong>性质：</strong>
+                <ul>
+                    <li>筛选性质：x[n] × δ[n-k] = x[k] × δ[n-k]</li>
+                    <li>任何序列都可以表示为单位冲激序列的线性组合</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>2. 单位阶跃序列（Unit Step Sequence）</h3>
+            <div class="formula">
+                u[n] = {1, n ≥ 0; 0, n < 0}
+            </div>
+            <p>在n≥0时值为1，n<0时值为0的序列</p>
+            
+            <div class="example">
+                <strong>关系：</strong>
+                <ul>
+                    <li>δ[n] = u[n] - u[n-1]</li>
+                    <li>u[n] = Σ(k=-∞ to n) δ[k]</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>3. 指数序列（Exponential Sequence）</h3>
+            <div class="formula">
+                x[n] = aⁿ, n ≥ 0
+            </div>
+            <p>当a为实数时：</p>
+            <ul>
+                <li>|a| > 1：递增指数序列</li>
+                <li>|a| < 1：递减指数序列</li>
+                <li>a > 0：正值序列</li>
+                <li>a < 0：交替正负值序列</li>
+            </ul>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>4. 正弦序列（Sinusoidal Sequence）</h3>
+            <div class="formula">
+                x[n] = A cos(Ωn + φ)
+            </div>
+            <p>其中：</p>
+            <ul>
+                <li><strong>A</strong>：幅度</li>
+                <li><strong>Ω</strong>：数字频率（弧度）</li>
+                <li><strong>φ</strong>：初相位</li>
+            </ul>
+            
+            <div class="example">
+                <strong>重要性质：</strong>
+                <p>离散时间正弦序列的周期性条件：Ω = 2πk/N（k, N为整数）</p>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>基本序列对比</h3>
+            <canvas id="basicSequences" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>指数序列参数a：</label>
+                <input type="number" id="expParam" value="0.8" step="0.1" min="-2" max="2">
+                <label>正弦序列频率Ω：</label>
+                <input type="number" id="sinFreq" value="0.2" step="0.1" min="0" max="1">
+                <button onclick="plotBasicSequences()">更新图形</button>
+            </div>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：序列表示</h4>
+            <p>给定序列 x[n] = {2, 1, -1, 0, 3, 2, 1}，其中 x[0] = -1（箭头标记）</p>
+            <p>问题：</p>
+            <ol>
+                <li>写出 x[-2], x[0], x[3] 的值</li>
+                <li>画出序列的茎状图</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                1. x[-2] = 2, x[0] = -1, x[3] = 3<br>
+                2. 茎状图应该在相应的n值处画出对应高度的竖线，在n=0处标记箭头
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：序列运算</h4>
+            <p>已知 x[n] = {1, 2, 3, 2, 1}，其中 x[0] = 3</p>
+            <p>求：</p>
+            <ol>
+                <li>y₁[n] = x[n-1]</li>
+                <li>y₂[n] = x[-n]</li>
+                <li>y₃[n] = x[n] + x[n-2]</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                1. y₁[n] = x[n-1] = {1, 2, 3, 2, 1} 向右移动1位<br>
+                2. y₂[n] = x[-n] = {1, 2, 3, 2, 1} 时间反转<br>
+                3. y₃[n] = x[n] + x[n-2] 需要将x[n-2]向右移2位后相加
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：基本序列</h4>
+            <p>使用单位冲激序列表示以下序列：</p>
+            <p>x[n] = {0, 0, 1, 2, 0, -1, 0, ...}，其中第一个非零值在n=2处</p>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                x[n] = δ[n-2] + 2δ[n-3] - δ[n-5]
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：周期性判断</h4>
+            <p>判断以下序列的周期性：</p>
+            <ol>
+                <li>x₁[n] = cos(πn/4)</li>
+                <li>x₂[n] = cos(πn/3)</li>
+                <li>x₃[n] = cos(n)</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                1. x₁[n]: Ω = π/4 = 2π(1/8)，周期N = 8<br>
+                2. x₂[n]: Ω = π/3，π/3 ≠ 2πk/N的形式，非周期<br>
+                3. x₃[n]: Ω = 1，1 ≠ 2πk/N的形式，非周期
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 绘制序列的通用函数
+        function drawSequence(canvas, sequence, title, color = 'blue') {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 设置坐标系
+            const centerX = width / 2;
+            const centerY = height * 0.7;
+            const scaleX = 30;
+            const scaleY = 50;
+            
+            // 画坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // x轴
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            // y轴
+            ctx.beginPath();
+            ctx.moveTo(centerX, 20);
+            ctx.lineTo(centerX, height - 20);
+            ctx.stroke();
+            
+            // 画刻度
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            for (let i = -8; i <= 8; i++) {
+                const x = centerX + i * scaleX;
+                if (x > 20 && x < width - 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY - 3);
+                    ctx.lineTo(x, centerY + 3);
+                    ctx.stroke();
+                    
+                    if (i !== 0) {
+                        ctx.fillText(i.toString(), x, centerY + 15);
+                    }
+                }
+            }
+            
+            // 原点标记
+            ctx.fillText('0', centerX - 10, centerY + 15);
+            
+            // 画序列
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            
+            for (let n in sequence) {
+                const x = centerX + parseInt(n) * scaleX;
+                const y = centerY - sequence[n] * scaleY;
+                
+                if (x > 20 && x < width - 20) {
+                    // 画茎
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    // 画点
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width / 2, 15);
+        }
+        
+        // 生成基本序列
+        function generateSequence(type, params = {}) {
+            const sequence = {};
+            const range = params.range || [-8, 8];
+            
+            for (let n = range[0]; n <= range[1]; n++) {
+                switch (type) {
+                    case 'unit_impulse':
+                        sequence[n] = (n === 0) ? 1 : 0;
+                        break;
+                    case 'unit_step':
+                        sequence[n] = (n >= 0) ? 1 : 0;
+                        break;
+                    case 'exponential':
+                        const a = params.a || 0.8;
+                        sequence[n] = (n >= 0) ? Math.pow(a, n) : 0;
+                        break;
+                    case 'sinusoid':
+                        const A = params.A || 1;
+                        const omega = params.omega || 0.2;
+                        const phi = params.phi || 0;
+                        sequence[n] = A * Math.cos(omega * n + phi);
+                        break;
+                    case 'custom':
+                    default:
+                        // 示例自定义序列
+                        if (n >= -3 && n <= 3) {
+                            sequence[n] = Math.sin(n * 0.5) + 0.5 * Math.cos(n * 0.8);
+                        } else {
+                            sequence[n] = 0;
+                        }
+                        break;
+                }
+            }
+            return sequence;
+        }
+        
+        // 绘制选择的序列
+        function plotSequence() {
+            const canvas = document.getElementById('sequencePlot');
+            const type = document.getElementById('sequenceType').value;
+            
+            let sequence, title;
+            switch (type) {
+                case 'unit_impulse':
+                    sequence = generateSequence('unit_impulse');
+                    title = '单位冲激序列 δ[n]';
+                    break;
+                case 'unit_step':
+                    sequence = generateSequence('unit_step');
+                    title = '单位阶跃序列 u[n]';
+                    break;
+                case 'exponential':
+                    sequence = generateSequence('exponential', {a: 0.8});
+                    title = '指数序列 x[n] = (0.8)^n u[n]';
+                    break;
+                case 'sinusoid':
+                    sequence = generateSequence('sinusoid', {omega: 0.2});
+                    title = '正弦序列 x[n] = cos(0.2n)';
+                    break;
+                default:
+                    sequence = generateSequence('custom');
+                    title = '自定义序列';
+                    break;
+            }
+            
+            drawSequence(canvas, sequence, title);
+        }
+        
+        // 执行序列运算
+        function performOperation() {
+            const canvas1 = document.getElementById('operationPlot1');
+            const canvas2 = document.getElementById('operationPlot2');
+            const canvasResult = document.getElementById('operationResult');
+            const operation = document.getElementById('operationType').value;
+            const shiftAmount = parseInt(document.getElementById('shiftAmount').value);
+            
+            // 生成两个示例序列
+            const seq1 = generateSequence('sinusoid', {omega: 0.3, range: [-5, 5]});
+            const seq2 = generateSequence('exponential', {a: 0.9, range: [-5, 5]});
+            
+            drawSequence(canvas1, seq1, 'x₁[n]', 'blue');
+            
+            let seq2_modified = {};
+            let result = {};
+            let resultTitle = '';
+            
+            switch (operation) {
+                case 'add':
+                    seq2_modified = seq2;
+                    for (let n = -5; n <= 5; n++) {
+                        result[n] = (seq1[n] || 0) + (seq2[n] || 0);
+                    }
+                    resultTitle = 'x₁[n] + x₂[n]';
+                    break;
+                case 'multiply':
+                    seq2_modified = seq2;
+                    for (let n = -5; n <= 5; n++) {
+                        result[n] = (seq1[n] || 0) * (seq2[n] || 0);
+                    }
+                    resultTitle = 'x₁[n] × x₂[n]';
+                    break;
+                case 'shift':
+                    seq2_modified = seq1;
+                    for (let n = -5; n <= 5; n++) {
+                        result[n] = seq1[n - shiftAmount] || 0;
+                    }
+                    resultTitle = `x₁[n - ${shiftAmount}]`;
+                    break;
+                case 'reverse':
+                    seq2_modified = seq1;
+                    for (let n = -5; n <= 5; n++) {
+                        result[n] = seq1[-n] || 0;
+                    }
+                    resultTitle = 'x₁[-n]';
+                    break;
+            }
+            
+            drawSequence(canvas2, seq2_modified, operation === 'add' || operation === 'multiply' ? 'x₂[n]' : 'x₁[n]', 'red');
+            drawSequence(canvasResult, result, resultTitle, 'green');
+        }
+        
+        // 绘制基本序列对比
+        function plotBasicSequences() {
+            const canvas = document.getElementById('basicSequences');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const expParam = parseFloat(document.getElementById('expParam').value);
+            const sinFreq = parseFloat(document.getElementById('sinFreq').value);
+            
+            // 分成四个子图
+            const subWidth = width / 2;
+            const subHeight = height / 2;
+            
+            // 创建临时canvas用于绘制每个子图
+            const sequences = [
+                {seq: generateSequence('unit_impulse', {range: [-5, 5]}), title: '单位冲激序列', color: 'red'},
+                {seq: generateSequence('unit_step', {range: [-5, 5]}), title: '单位阶跃序列', color: 'blue'},
+                {seq: generateSequence('exponential', {a: expParam, range: [-5, 5]}), title: `指数序列 (a=${expParam})`, color: 'green'},
+                {seq: generateSequence('sinusoid', {omega: sinFreq, range: [-5, 5]}), title: `正弦序列 (Ω=${sinFreq})`, color: 'purple'}
+            ];
+            
+            // 为每个子图绘制序列
+            sequences.forEach((seqData, index) => {
+                const x = (index % 2) * subWidth;
+                const y = Math.floor(index / 2) * subHeight;
+                
+                // 保存当前状态
+                ctx.save();
+                
+                // 设置裁剪区域
+                ctx.beginPath();
+                ctx.rect(x, y, subWidth, subHeight);
+                ctx.clip();
+                
+                // 平移坐标系
+                ctx.translate(x, y);
+                
+                // 绘制坐标轴和序列
+                drawSubSequence(ctx, seqData.seq, seqData.title, seqData.color, subWidth, subHeight);
+                
+                // 恢复状态
+                ctx.restore();
+            });
+        }
+        
+        function drawSubSequence(ctx, sequence, title, color, width, height) {
+            const centerX = width / 2;
+            const centerY = height * 0.8;
+            const scaleX = 25;
+            const scaleY = 30;
+            
+            // 画坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, 20);
+            ctx.lineTo(centerX, height - 20);
+            ctx.stroke();
+            
+            // 画序列
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            
+            for (let n in sequence) {
+                const x = centerX + parseInt(n) * scaleX;
+                const y = centerY - sequence[n] * scaleY;
+                
+                if (x > 20 && x < width - 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, centerY);
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width / 2, 15);
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            plotSequence();
+            performOperation();
+            plotBasicSequences();
+        };
+    </script>
+</body>
+</html>

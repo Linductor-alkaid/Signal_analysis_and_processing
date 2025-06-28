@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离散傅里叶变换的应用</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .application-box {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .method-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .method-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .spectrum-analysis {
+            background: #f0f8ff;
+            border: 1px solid #87ceeb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .two-d-demo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        
+        .image-container {
+            text-align: center;
+        }
+        
+        .performance-table {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .steps-container {
+            background: #fff3e0;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .steps-container ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .note-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .demo-item {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - 第七章：离散傅里叶变换的应用</h1>
+        
+        <div class="application-box">
+            <h3>🌟 本章概述</h3>
+            <p>本章展示DFT/FFT在实际工程中的三大核心应用：</p>
+            <ul>
+                <li><strong>快速卷积</strong>：利用FFT高效实现信号滤波和系统分析</li>
+                <li><strong>频谱分析</strong>：用DFT分析实际连续信号的频率特性</li>
+                <li><strong>二维DFT</strong>：图像处理和二维信号分析的基础工具</li>
+            </ul>
+        </div>
+        
+        <h2>7.1 用FFT实现快速卷积</h2>
+        
+        <div class="knowledge-point">
+            <h3>基本原理</h3>
+            <p>卷积定理是快速卷积的理论基础：</p>
+            <div class="formula">
+                时域卷积 ↔ 频域相乘<br>
+                y[n] = x[n] * h[n] ↔ Y[k] = X[k] · H[k]
+            </div>
+            
+            <p>因此，可以通过以下步骤实现快速卷积：</p>
+            <div class="steps-container">
+                <h4>快速卷积算法步骤</h4>
+                <ol>
+                    <li><strong>补零</strong>：将两个序列补零到长度N ≥ L₁ + L₂ - 1</li>
+                    <li><strong>FFT变换</strong>：X[k] = FFT{x[n]}, H[k] = FFT{h[n]}</li>
+                    <li><strong>频域相乘</strong>：Y[k] = X[k] · H[k]</li>
+                    <li><strong>IFFT变换</strong>：y[n] = IFFT{Y[k]}</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="method-comparison">
+            <div class="method-item">
+                <h4>直接卷积</h4>
+                <p><strong>复杂度：O(N²)</strong></p>
+                <p>计算量：N₁ × N₂次乘法</p>
+                <p>适用：短序列卷积</p>
+                <div class="formula">
+                    y[n] = ∑<sub>m</sub> x[m]h[n-m]
+                </div>
+            </div>
+            <div class="method-item">
+                <h4>快速卷积(FFT)</h4>
+                <p><strong>复杂度：O(N log N)</strong></p>
+                <p>计算量：3次FFT + N次乘法</p>
+                <p>适用：长序列卷积</p>
+                <div class="formula">
+                    FFT → 相乘 → IFFT
+                </div>
+            </div>
+        </div>
+        
+        <div class="performance-table">
+            <h4>性能对比表</h4>
+            <table>
+                <tr>
+                    <th>序列长度</th>
+                    <th>直接卷积</th>
+                    <th>快速卷积</th>
+                    <th>加速比</th>
+                    <th>交叉点</th>
+                </tr>
+                <tr>
+                    <td>64</td>
+                    <td>4,096</td>
+                    <td>~1,200</td>
+                    <td>3.4×</td>
+                    <td rowspan="4">约32-64点</td>
+                </tr>
+                <tr>
+                    <td>128</td>
+                    <td>16,384</td>
+                    <td>~2,700</td>
+                    <td>6.1×</td>
+                </tr>
+                <tr>
+                    <td>512</td>
+                    <td>262,144</td>
+                    <td>~14,000</td>
+                    <td>18.7×</td>
+                </tr>
+                <tr>
+                    <td>1024</td>
+                    <td>1,048,576</td>
+                    <td>~31,000</td>
+                    <td>33.8×</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="plot-container">
+            <h3>快速卷积演示器</h3>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <canvas id="inputSignal" width="250" height="150"></canvas>
+                    <p>输入信号 x[n]</p>
+                </div>
+                <div class="demo-item">
+                    <canvas id="impulseResponse" width="250" height="150"></canvas>
+                    <p>冲激响应 h[n]</p>
+                </div>
+                <div class="demo-item">
+                    <canvas id="convolutionResult" width="250" height="150"></canvas>
+                    <p>卷积结果 y[n]</p>
+                </div>
+            </div>
+            <div class="controls">
+                <label>信号类型：</label>
+                <select id="signalType">
+                    <option value="pulse">脉冲信号</option>
+                    <option value="step">阶跃信号</option>
+                    <option value="exponential">指数信号</option>
+                    <option value="sinc">sinc信号</option>
+                </select>
+                <label>滤波器类型：</label>
+                <select id="filterType">
+                    <option value="lowpass">低通滤波器</option>
+                    <option value="highpass">高通滤波器</option>
+                    <option value="bandpass">带通滤波器</option>
+                    <option value="differentiator">微分器</option>
+                </select>
+                <button onclick="performFastConvolution()">执行快速卷积</button>
+                <button onclick="compareConvolutionMethods()">性能对比</button>
+            </div>
+            <div id="convolutionResult" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <h2>7.2 用DFT逼近连续信号频谱</h2>
+        
+        <div class="spectrum-analysis">
+            <h3>频谱分析的实际问题</h3>
+            <p>在实际应用中，我们需要分析<strong>连续时间信号</strong>的频谱，但只能使用<strong>离散的DFT</strong>。这涉及三个关键问题：</p>
+            <ul>
+                <li><strong>采样</strong>：连续信号 → 离散序列</li>
+                <li><strong>截取</strong>：无限长序列 → 有限长序列</li>
+                <li><strong>分析</strong>：DFT → 连续频谱的逼近</li>
+            </ul>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>频谱分析的三个环节</h3>
+            
+            <h4>1. 时域采样</h4>
+            <div class="formula">
+                x[n] = x_a(nT), n = 0, 1, 2, ...
+            </div>
+            <p><strong>采样定理</strong>：f_s ≥ 2f_max（避免频谱混叠）</p>
+            
+            <h4>2. 时域截取（加窗）</h4>
+            <div class="formula">
+                x_w[n] = x[n] · w[n], n = 0, 1, ..., N-1
+            </div>
+            <p><strong>窗函数影响</strong>：频谱分辨率 vs 频谱泄漏</p>
+            
+            <h4>3. DFT频谱分析</h4>
+            <div class="formula">
+                X[k] = DFT{x_w[n]} ≈ X_a(jΩ)|<sub>Ω=2πk/(NT)</sub>
+            </div>
+            <p><strong>频率分辨率</strong>：Δf = f_s/N = 1/(NT)</p>
+        </div>
+        
+        <div class="important">
+            <h3>⚠️ 频谱分析中的关键参数</h3>
+            <ul>
+                <li><strong>采样频率 f_s</strong>：决定频谱的最高频率范围 [0, f_s/2]</li>
+                <li><strong>记录长度 T = NT</strong>：决定频率分辨率 Δf = 1/T</li>
+                <li><strong>DFT长度 N</strong>：决定频谱的采样点数</li>
+                <li><strong>窗函数</strong>：影响频谱的形状和精度</li>
+            </ul>
+        </div>
+        
+        <div class="plot-container">
+            <h3>频谱分析参数影响演示</h3>
+            <canvas id="spectrumAnalysis" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>信号频率(Hz)：</label>
+                <input type="number" id="signalFreq" value="50" min="10" max="200">
+                <label>采样频率(Hz)：</label>
+                <input type="number" id="samplingFreq" value="500" min="100" max="1000">
+                <label>记录长度(s)：</label>
+                <input type="number" id="recordLength" value="1" min="0.1" max="5" step="0.1">
+                <label>窗函数：</label>
+                <select id="windowType">
+                    <option value="rectangular">矩形窗</option>
+                    <option value="hanning">汉宁窗</option>
+                    <option value="hamming">海明窗</option>
+                    <option value="blackman">布莱克曼窗</option>
+                </select>
+                <button onclick="analyzeSpectrum()">分析频谱</button>
+            </div>
+            <div id="spectrumInfo" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <div class="note-box">
+            <h4>💡 实际频谱分析技巧</h4>
+            <ul>
+                <li><strong>零填充</strong>：增加DFT长度可以内插频谱，但不能提高分辨率</li>
+                <li><strong>窗函数选择</strong>：矩形窗分辨率最高，其他窗抑制副瓣</li>
+                <li><strong>重叠分析</strong>：用于分析非平稳信号的时变频谱</li>
+                <li><strong>平均处理</strong>：多段平均可以降低噪声影响</li>
+            </ul>
+        </div>
+        
+        <h2>7.3 二维离散傅里叶变换</h2>
+        
+        <div class="knowledge-point">
+            <h3>二维DFT的定义</h3>
+            <p>对于二维序列 x[m, n]，其二维DFT定义为：</p>
+            
+            <h4>正变换</h4>
+            <div class="formula">
+                X[k, l] = ∑<sub>m=0</sub><sup>M-1</sup> ∑<sub>n=0</sub><sup>N-1</sup> x[m,n]e<sup>-j2π(km/M + ln/N)</sup>
+            </div>
+            
+            <h4>逆变换</h4>
+            <div class="formula">
+                x[m, n] = (1/MN) ∑<sub>k=0</sub><sup>M-1</sup> ∑<sub>l=0</sub><sup>N-1</sup> X[k,l]e<sup>j2π(km/M + ln/N)</sup>
+            </div>
+            
+            <p>其中：m, k = 0, 1, ..., M-1；n, l = 0, 1, ..., N-1</p>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>二维DFT的可分离性</h3>
+            <p>二维DFT可以分解为两次一维DFT：</p>
+            <div class="steps-container">
+                <h4>行列分离算法</h4>
+                <ol>
+                    <li><strong>行变换</strong>：对每一行进行一维DFT
+                        <div class="formula">X₁[k, n] = ∑<sub>m=0</sub><sup>M-1</sup> x[m,n]e<sup>-j2πkm/M</sup></div>
+                    </li>
+                    <li><strong>列变换</strong>：对结果的每一列进行一维DFT
+                        <div class="formula">X[k, l] = ∑<sub>n=0</sub><sup>N-1</sup> X₁[k,n]e<sup>-j2πln/N</sup></div>
+                    </li>
+                </ol>
+            </div>
+            
+            <div class="important">
+                <p><strong>计算优势</strong>：复杂度从O(M²N²)降到O(MN(M+N))</p>
+            </div>
+        </div>
+        
+        <div class="application-box">
+            <h3>🖼️ 二维DFT的主要应用</h3>
+            <div class="method-comparison">
+                <div class="method-item">
+                    <h4>图像处理</h4>
+                    <ul>
+                        <li>图像增强</li>
+                        <li>噪声抑制</li>
+                        <li>边缘检测</li>
+                        <li>图像复原</li>
+                    </ul>
+                </div>
+                <div class="method-item">
+                    <h4>频域滤波</h4>
+                    <ul>
+                        <li>低通滤波（平滑）</li>
+                        <li>高通滤波（锐化）</li>
+                        <li>带通滤波</li>
+                        <li>方向滤波</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>二维DFT图像处理演示</h3>
+            <div class="two-d-demo">
+                <div class="image-container">
+                    <canvas id="originalImage" width="150" height="150"></canvas>
+                    <p>原始图像</p>
+                </div>
+                <div class="image-container">
+                    <canvas id="frequencyDomain" width="150" height="150"></canvas>
+                    <p>频域（对数幅度谱）</p>
+                </div>
+                <div class="image-container">
+                    <canvas id="filteredImage" width="150" height="150"></canvas>
+                    <p>滤波结果</p>
+                </div>
+            </div>
+            <div class="controls">
+                <label>测试图像：</label>
+                <select id="testImage">
+                    <option value="checkerboard">棋盘图案</option>
+                    <option value="circle">圆形图案</option>
+                    <option value="cross">十字图案</option>
+                    <option value="diagonal">对角线图案</option>
+                </select>
+                <label>滤波器：</label>
+                <select id="filter2D">
+                    <option value="lowpass">低通滤波</option>
+                    <option value="highpass">高通滤波</option>
+                    <option value="bandpass">带通滤波</option>
+                    <option value="notch">陷波滤波</option>
+                </select>
+                <label>截止频率：</label>
+                <input type="range" id="cutoffFreq" min="0.1" max="0.5" step="0.05" value="0.2">
+                <span id="cutoffValue">0.2</span>
+                <button onclick="apply2DFilter()">应用滤波</button>
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>二维DFT的性质</h3>
+            <div class="method-comparison">
+                <div class="method-item">
+                    <h4>基本性质</h4>
+                    <ul>
+                        <li><strong>线性性</strong></li>
+                        <li><strong>移位性质</strong></li>
+                        <li><strong>旋转性质</strong></li>
+                        <li><strong>尺度变换</strong></li>
+                    </ul>
+                </div>
+                <div class="method-item">
+                    <h4>频域特性</h4>
+                    <ul>
+                        <li><strong>周期性</strong></li>
+                        <li><strong>共轭对称性</strong></li>
+                        <li><strong>帕塞瓦尔定理</strong></li>
+                        <li><strong>卷积定理</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <h2>7.4 实际应用案例</h2>
+        
+        <div class="application-box">
+            <h3>🚀 DFT/FFT在现代技术中的应用</h3>
+            
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <h4>🎵 音频处理</h4>
+                    <ul>
+                        <li>MP3压缩编码</li>
+                        <li>音频均衡器</li>
+                        <li>回声消除</li>
+                        <li>音乐合成</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>📡 通信系统</h4>
+                    <ul>
+                        <li>OFDM调制</li>
+                        <li>信道均衡</li>
+                        <li>频谱分析</li>
+                        <li>雷达信号处理</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>🖼️ 图像处理</h4>
+                    <ul>
+                        <li>JPEG压缩</li>
+                        <li>图像增强</li>
+                        <li>模式识别</li>
+                        <li>医学影像</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>🔬 科学计算</h4>
+                    <ul>
+                        <li>偏微分方程求解</li>
+                        <li>信号重建</li>
+                        <li>数据压缩</li>
+                        <li>谱估计</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>🎮 多媒体</h4>
+                    <ul>
+                        <li>视频编码</li>
+                        <li>实时滤波</li>
+                        <li>特效处理</li>
+                        <li>虚拟现实</li>
+                    </ul>
+                </div>
+                
+                <div class="demo-item">
+                    <h4>🏭 工业控制</h4>
+                    <ul>
+                        <li>振动分析</li>
+                        <li>故障诊断</li>
+                        <li>质量检测</li>
+                        <li>过程控制</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="important">
+            <h3>🎯 本章学习要点总结</h3>
+            <ol>
+                <li><strong>快速卷积</strong>：掌握FFT实现高效卷积的原理和步骤</li>
+                <li><strong>频谱分析</strong>：理解用DFT分析连续信号频谱的方法和局限</li>
+                <li><strong>二维DFT</strong>：了解图像和二维信号处理的基础工具</li>
+                <li><strong>实际应用</strong>：认识DFT/FFT在现代技术中的广泛应用</li>
+                <li><strong>参数选择</strong>：学会在实际应用中合理选择采样率、记录长度等参数</li>
+                <li><strong>算法优化</strong>：理解分离算法、窗函数等优化技术</li>
+            </ol>
+        </div>
+        
+        <div class="note-box">
+            <h3>💭 课程总结回顾</h3>
+            <p><strong>知识体系的价值：</strong></p>
+            <ul>
+                <li>从基础概念到实用算法的完整体系</li>
+                <li>从数学理论到工程应用的有机结合</li>
+                <li>为后续数字滤波器设计、现代信号处理奠定基础</li>
+                <li>具备了现代数字信号处理的核心知识和技能</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 生成测试信号
+        function generateTestSignal(type, length) {
+            const signal = [];
+            for (let n = 0; n < length; n++) {
+                let value = 0;
+                switch (type) {
+                    case 'pulse':
+                        value = (n < length/4) ? 1 : 0;
+                        break;
+                    case 'step':
+                        value = (n >= length/4) ? 1 : 0;
+                        break;
+                    case 'exponential':
+                        value = Math.exp(-n/10);
+                        break;
+                    case 'sinc':
+                        const x = (n - length/2) / 4;
+                        value = x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x);
+                        break;
+                }
+                signal.push(value);
+            }
+            return signal;
+        }
+        
+        // 生成滤波器
+        function generateFilter(type, length) {
+            const filter = [];
+            for (let n = 0; n < length; n++) {
+                let value = 0;
+                switch (type) {
+                    case 'lowpass':
+                        // 简单低通滤波器
+                        const weights = [0.1, 0.2, 0.4, 0.2, 0.1];
+                        value = (n < weights.length) ? weights[n] : 0;
+                        break;
+                    case 'highpass':
+                        // 简单高通滤波器
+                        if (n === 0) value = 1;
+                        else if (n === 1) value = -1;
+                        else value = 0;
+                        break;
+                    case 'bandpass':
+                        // 简单带通滤波器
+                        value = 0.5 * Math.cos(2 * Math.PI * n / 8) * Math.exp(-n/10);
+                        break;
+                    case 'differentiator':
+                        // 微分器
+                        if (n === 0) value = 1;
+                        else if (n === 1) value = -1;
+                        else value = 0;
+                        break;
+                }
+                filter.push(value);
+            }
+            return filter;
+        }
+        
+        // 执行快速卷积
+        function performFastConvolution() {
+            const signalType = document.getElementById('signalType').value;
+            const filterType = document.getElementById('filterType').value;
+            
+            const signal = generateTestSignal(signalType, 32);
+            const filter = generateFilter(filterType, 16);
+            
+            // 绘制输入信号和滤波器
+            plotSignal(signal, 'inputSignal', '输入信号');
+            plotSignal(filter, 'impulseResponse', '冲激响应');
+            
+            // 执行卷积（简化实现）
+            const convResult = linearConvolution(signal, filter);
+            plotSignal(convResult, 'convolutionResult', '卷积结果');
+            
+            // 显示信息
+            document.getElementById('convolutionResult').innerHTML = `
+                <h4>卷积完成</h4>
+                <p>输入长度：${signal.length}，滤波器长度：${filter.length}</p>
+                <p>输出长度：${convResult.length}</p>
+                <p>使用快速卷积可显著提高计算效率</p>
+            `;
+        }
+        
+        // 线性卷积实现
+        function linearConvolution(x, h) {
+            const result = [];
+            const N = x.length + h.length - 1;
+            
+            for (let n = 0; n < N; n++) {
+                let sum = 0;
+                for (let m = 0; m < h.length; m++) {
+                    if (n - m >= 0 && n - m < x.length) {
+                        sum += x[n - m] * h[m];
+                    }
+                }
+                result.push(sum);
+            }
+            
+            return result;
+        }
+        
+        // 绘制信号
+        function plotSignal(data, canvasId, title) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const centerY = height * 0.8;
+            const scaleX = (width - 40) / (data.length + 1);
+            const maxVal = Math.max(...data.map(Math.abs)) || 1;
+            const scaleY = (height * 0.5) / maxVal;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            // 绘制信号
+            ctx.strokeStyle = '#3498db';
+            ctx.fillStyle = '#3498db';
+            ctx.lineWidth = 2;
+            
+            data.forEach((value, index) => {
+                const x = 20 + (index + 1) * scaleX;
+                const y = centerY - value * scaleY;
+                
+                // 茎
+                ctx.beginPath();
+                ctx.moveTo(x, centerY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                // 点
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // 标题
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width / 2, 15);
+        }
+        
+        // 性能对比
+        function compareConvolutionMethods() {
+            const lengths = [64, 128, 256, 512, 1024];
+            let resultHTML = '<h4>卷积方法性能对比</h4>';
+            resultHTML += '<table style="width: 100%; border-collapse: collapse;">';
+            resultHTML += '<tr><th>长度</th><th>直接卷积</th><th>快速卷积</th><th>加速比</th></tr>';
+            
+            lengths.forEach(N => {
+                const directOps = N * N;
+                const fftOps = 3 * N * Math.log2(N) + N; // 3次FFT + N次乘法
+                const speedup = directOps / fftOps;
+                
+                resultHTML += `<tr>
+                    <td>${N}</td>
+                    <td>${directOps.toLocaleString()}</td>
+                    <td>${Math.round(fftOps).toLocaleString()}</td>
+                    <td>${speedup.toFixed(1)}×</td>
+                </tr>`;
+            });
+            
+            resultHTML += '</table>';
+            document.getElementById('convolutionResult').innerHTML = resultHTML;
+        }
+        
+        // 频谱分析
+        function analyzeSpectrum() {
+            const signalFreq = parseFloat(document.getElementById('signalFreq').value);
+            const samplingFreq = parseFloat(document.getElementById('samplingFreq').value);
+            const recordLength = parseFloat(document.getElementById('recordLength').value);
+            const windowType = document.getElementById('windowType').value;
+            
+            const N = Math.pow(2, Math.ceil(Math.log2(samplingFreq * recordLength)));
+            const dt = 1 / samplingFreq;
+            
+            // 生成信号
+            const signal = [];
+            for (let n = 0; n < N; n++) {
+                const t = n * dt;
+                signal.push(Math.cos(2 * Math.PI * signalFreq * t) + 0.1 * Math.random());
+            }
+            
+            // 应用窗函数
+            const windowedSignal = applyWindow(signal, windowType);
+            
+            // 计算频谱
+            const spectrum = calculateSpectrum(windowedSignal, samplingFreq);
+            
+            // 绘制结果
+            plotSpectrumAnalysis(signal, windowedSignal, spectrum, samplingFreq);
+            
+            // 显示参数信息
+            const freqResolution = samplingFreq / N;
+            document.getElementById('spectrumInfo').innerHTML = `
+                <h4>频谱分析参数</h4>
+                <p>采样频率：${samplingFreq} Hz</p>
+                <p>频率分辨率：${freqResolution.toFixed(2)} Hz</p>
+                <p>最大频率：${samplingFreq/2} Hz</p>
+                <p>样本数：${N}</p>
+                <p>实际记录长度：${(N/samplingFreq).toFixed(2)} s</p>
+            `;
+        }
+        
+        // 应用窗函数
+        function applyWindow(signal, windowType) {
+            const N = signal.length;
+            const windowed = [];
+            
+            for (let n = 0; n < N; n++) {
+                let w = 1;
+                switch (windowType) {
+                    case 'rectangular':
+                        w = 1;
+                        break;
+                    case 'hanning':
+                        w = 0.5 * (1 - Math.cos(2 * Math.PI * n / (N - 1)));
+                        break;
+                    case 'hamming':
+                        w = 0.54 - 0.46 * Math.cos(2 * Math.PI * n / (N - 1));
+                        break;
+                    case 'blackman':
+                        w = 0.42 - 0.5 * Math.cos(2 * Math.PI * n / (N - 1)) + 0.08 * Math.cos(4 * Math.PI * n / (N - 1));
+                        break;
+                }
+                windowed.push(signal[n] * w);
+            }
+            
+            return windowed;
+        }
+        
+        // 计算频谱
+        function calculateSpectrum(signal, fs) {
+            const N = signal.length;
+            const spectrum = [];
+            
+            // 简化的DFT计算（只计算正频率部分）
+            for (let k = 0; k < N/2; k++) {
+                let real = 0;
+                let imag = 0;
+                
+                for (let n = 0; n < N; n++) {
+                    const angle = -2 * Math.PI * k * n / N;
+                    real += signal[n] * Math.cos(angle);
+                    imag += signal[n] * Math.sin(angle);
+                }
+                
+                const magnitude = Math.sqrt(real * real + imag * imag);
+                const frequency = k * fs / N;
+                spectrum.push({frequency: frequency, magnitude: magnitude});
+            }
+            
+            return spectrum;
+        }
+        
+        // 绘制频谱分析结果
+        function plotSpectrumAnalysis(original, windowed, spectrum, fs) {
+            const canvas = document.getElementById('spectrumAnalysis');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 分成两个子图
+            const subHeight = height / 2;
+            
+            // 绘制时域信号
+            plotSubgraph(ctx, original.slice(0, 100), 0, 0, width, subHeight, '时域信号', '#3498db');
+            
+            // 绘制频域谱
+            const freqs = spectrum.map(s => s.frequency);
+            const mags = spectrum.map(s => s.magnitude);
+            plotSubgraph(ctx, mags, 0, subHeight, width, subHeight, '频域幅度谱', '#e74c3c');
+            
+            // 添加频率轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            const maxFreq = fs / 2;
+            for (let i = 0; i <= 4; i++) {
+                const f = (i * maxFreq / 4);
+                const x = 20 + i * (width - 40) / 4;
+                ctx.fillText(`${f.toFixed(0)}Hz`, x, height - 5);
+            }
+        }
+        
+        // 绘制子图
+        function plotSubgraph(ctx, data, offsetX, offsetY, subWidth, subHeight, title, color) {
+            const centerY = offsetY + subHeight * 0.8;
+            const scaleX = (subWidth - 40) / data.length;
+            const maxVal = Math.max(...data.map(Math.abs)) || 1;
+            const scaleY = (subHeight * 0.4) / maxVal;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 20, centerY);
+            ctx.lineTo(offsetX + subWidth - 20, centerY);
+            ctx.stroke();
+            
+            // 绘制数据
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            
+            data.forEach((value, index) => {
+                const x = offsetX + 20 + index * scaleX;
+                const y = centerY - value * scaleY;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // 标题
+            ctx.fillStyle = color;
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, offsetX + subWidth / 2, offsetY + 15);
+        }
+        
+        // 生成测试图像
+        function generateTestImage(type, size) {
+            const image = [];
+            for (let i = 0; i < size; i++) {
+                const row = [];
+                for (let j = 0; j < size; j++) {
+                    let value = 0;
+                    switch (type) {
+                        case 'checkerboard':
+                            value = ((Math.floor(i/4) + Math.floor(j/4)) % 2) * 255;
+                            break;
+                        case 'circle':
+                            const cx = size / 2, cy = size / 2;
+                            const dist = Math.sqrt((i - cx) * (i - cx) + (j - cy) * (j - cy));
+                            value = (dist < size / 4) ? 255 : 0;
+                            break;
+                        case 'cross':
+                            value = (Math.abs(i - size/2) < 2 || Math.abs(j - size/2) < 2) ? 255 : 0;
+                            break;
+                        case 'diagonal':
+                            value = (Math.abs(i - j) < 2) ? 255 : 0;
+                            break;
+                    }
+                    row.push(value);
+                }
+                image.push(row);
+            }
+            return image;
+        }
+        
+        // 应用二维滤波
+        function apply2DFilter() {
+            const imageType = document.getElementById('testImage').value;
+            const filterType = document.getElementById('filter2D').value;
+            const cutoff = parseFloat(document.getElementById('cutoffFreq').value);
+            
+            document.getElementById('cutoffValue').textContent = cutoff.toFixed(2);
+            
+            const size = 32;
+            const image = generateTestImage(imageType, size);
+            
+            // 绘制原始图像
+            drawImage(image, 'originalImage');
+            
+            // 简化的二维FFT和滤波（演示用）
+            const filtered = apply2DFilterDemo(image, filterType, cutoff);
+            
+            // 绘制滤波结果
+            drawImage(filtered, 'filteredImage');
+            
+            // 绘制频域（简化显示）
+            drawFrequencyDomain(size, 'frequencyDomain');
+        }
+        
+        // 演示用的二维滤波
+        function apply2DFilterDemo(image, filterType, cutoff) {
+            const size = image.length;
+            const filtered = [];
+            
+            for (let i = 0; i < size; i++) {
+                const row = [];
+                for (let j = 0; j < size; j++) {
+                    const u = i < size/2 ? i : i - size;
+                    const v = j < size/2 ? j : j - size;
+                    const freq = Math.sqrt(u*u + v*v) / (size/2);
+                    
+                    let weight = 1;
+                    switch (filterType) {
+                        case 'lowpass':
+                            weight = freq < cutoff ? 1 : 0;
+                            break;
+                        case 'highpass':
+                            weight = freq > cutoff ? 1 : 0;
+                            break;
+                        case 'bandpass':
+                            weight = (freq > cutoff/2 && freq < cutoff*2) ? 1 : 0;
+                            break;
+                        case 'notch':
+                            weight = (freq < cutoff || freq > cutoff*2) ? 1 : 0;
+                            break;
+                    }
+                    
+                    row.push(Math.max(0, Math.min(255, image[i][j] * weight)));
+                }
+                filtered.push(row);
+            }
+            
+            return filtered;
+        }
+        
+        // 绘制图像
+        function drawImage(image, canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const size = image.length;
+            const pixelWidth = width / size;
+            const pixelHeight = height / size;
+            
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const gray = Math.round(image[i][j]);
+                    ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+                    ctx.fillRect(j * pixelWidth, i * pixelHeight, pixelWidth, pixelHeight);
+                }
+            }
+        }
+        
+        // 绘制频域显示
+        function drawFrequencyDomain(size, canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const pixelWidth = width / size;
+            const pixelHeight = height / size;
+            
+            // 简化的频域可视化
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const u = i < size/2 ? i : i - size;
+                    const v = j < size/2 ? j : j - size;
+                    const freq = Math.sqrt(u*u + v*v);
+                    const gray = Math.max(0, 255 - freq * 8);
+                    
+                    ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+                    ctx.fillRect(j * pixelWidth, i * pixelHeight, pixelWidth, pixelHeight);
+                }
+            }
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            performFastConvolution();
+            analyzeSpectrum();
+            apply2DFilter();
+        };
+    </script>
+</body>
+</html>

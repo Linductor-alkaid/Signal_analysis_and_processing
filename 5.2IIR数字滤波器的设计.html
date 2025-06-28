@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信号分析与处理 - IIR数字滤波器的设计</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .knowledge-point {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .formula {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+        
+        .important {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .example {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .plot-container {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        
+        .controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .exercise {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #2e7d2e;
+            margin-top: 0;
+        }
+        
+        .answer {
+            background: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .show-answer {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .show-answer:hover {
+            background: #218838;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background: #f2f2f2;
+        }
+        
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .method-box {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .bilinear-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .design-steps {
+            background: #f0f8ff;
+            border: 1px solid #87ceeb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .design-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .frequency-mapping {
+            background: #fff3e0;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .transformation-demo {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .transformation-part {
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+        
+        .warping-demo {
+            background: #ffeee8;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>信号分析与处理 - IIR数字滤波器的设计</h1>
+        
+        <div class="important">
+            <h3>🎯 设计基本思路</h3>
+            <p>IIR数字滤波器设计的<strong>基本思想</strong>：借助成熟的模拟滤波器设计理论，通过<strong>s域到z域的映射</strong>实现数字滤波器设计。</p>
+            <div class="formula">
+                H_a(s) → H(z)
+            </div>
+            <p>关键问题：如何建立s域与z域之间的映射关系？</p>
+        </div>
+        
+        <h2>1. 冲激响应不变法</h2>
+        
+        <div class="method-box">
+            <h3>🟢 基本原理</h3>
+            <p>冲激响应不变法的核心思想：<strong>数字滤波器的冲激响应序列h[n]等于模拟滤波器冲激响应ha(t)的采样</strong>。</p>
+            <div class="formula">
+                h[n] = T · ha(nT), n = 0, 1, 2, ...
+            </div>
+            <p>其中T是采样周期。</p>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>变换公式推导</h3>
+            
+            <h4>s域到z域的映射关系</h4>
+            <div class="formula">
+                s = σ + jΩ → z = e^{sT} = e^{σT}e^{jΩT}
+            </div>
+            
+            <h4>部分分式分解法</h4>
+            <p>对于模拟滤波器传递函数：</p>
+            <div class="formula">
+                H_a(s) = ∑(k=1 to N) A_k/(s - s_k)
+            </div>
+            
+            <p>对应的数字滤波器传递函数：</p>
+            <div class="formula">
+                H(z) = ∑(k=1 to N) A_k/(1 - e^{s_k T}z^{-1})
+            </div>
+            
+            <div class="example">
+                <h4>映射关系特点</h4>
+                <ul>
+                    <li><strong>左半s平面</strong> → <strong>单位圆内</strong>：保持稳定性</li>
+                    <li><strong>jΩ轴</strong> → <strong>单位圆</strong>：频率轴映射</li>
+                    <li><strong>多值映射</strong>：Ω和Ω+2π/T映射到同一点</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="design-steps">
+            <h3>🔧 设计步骤</h3>
+            <ol>
+                <li><strong>确定采样频率</strong>：选择合适的采样周期T</li>
+                <li><strong>设计模拟原型</strong>：设计满足指标的Ha(s)</li>
+                <li><strong>部分分式分解</strong>：将Ha(s)分解为简单分式之和</li>
+                <li><strong>应用变换公式</strong>：逐项进行s→z变换</li>
+                <li><strong>合并同类项</strong>：得到最终的H(z)</li>
+            </ol>
+        </div>
+        
+        <div class="important">
+            <h3>⚠️ 优缺点分析</h3>
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <h4>✅ 优点</h4>
+                    <ul>
+                        <li>保持时域特性</li>
+                        <li>稳定性保持</li>
+                        <li>设计过程直观</li>
+                        <li>适合时域设计要求</li>
+                    </ul>
+                </div>
+                <div class="comparison-item">
+                    <h4>❌ 缺点</h4>
+                    <ul>
+                        <li>存在频谱混叠</li>
+                        <li>高频特性差</li>
+                        <li>不适合高通、带阻</li>
+                        <li>需要满足采样定理</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>冲激响应不变法演示</h3>
+            <canvas id="impulseInvariantDemo" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>模拟滤波器类型：</label>
+                <select id="analogFilterType">
+                    <option value="butterworth">巴特沃思</option>
+                    <option value="chebyshev">切比雪夫</option>
+                </select>
+                <label>滤波器阶数：</label>
+                <input type="range" id="filterOrder1" min="2" max="6" step="1" value="3">
+                <span id="orderValue1">3</span>
+                <label>采样频率：</label>
+                <input type="range" id="samplingFreq" min="5" max="20" step="1" value="10">
+                <span id="samplingValue">10</span> Hz
+                <button onclick="updateImpulseInvariant()">更新演示</button>
+            </div>
+        </div>
+        
+        <h2>2. 双线性变换法</h2>
+        
+        <div class="bilinear-box">
+            <h3>🔵 基本原理</h3>
+            <p>双线性变换法通过<strong>数值积分的梯形公式</strong>建立s域与z域的映射关系，避免了频谱混叠问题。</p>
+            
+            <h4>变换公式</h4>
+            <div class="formula">
+                s = (2/T) · (1 - z^{-1})/(1 + z^{-1})
+            </div>
+            
+            <p>或者逆变换：</p>
+            <div class="formula">
+                z = (1 + sT/2)/(1 - sT/2)
+            </div>
+        </div>
+        
+        <div class="knowledge-point">
+            <h3>频率映射关系</h3>
+            
+            <h4>模拟频率与数字频率的关系</h4>
+            <div class="formula">
+                Ω = (2/T) tan(ωT/2)
+            </div>
+            
+            <p>或者：</p>
+            <div class="formula">
+                ω = 2 arctan(ΩT/2)
+            </div>
+            
+            <div class="warping-demo">
+                <h4>🌀 频率弯曲现象</h4>
+                <p>双线性变换引入<strong>频率弯曲(Frequency Warping)</strong>：</p>
+                <ul>
+                    <li><strong>低频段</strong>：近似线性关系 ω ≈ ΩT</li>
+                    <li><strong>高频段</strong>：严重非线性，ω → π 当 Ω → ∞</li>
+                    <li><strong>关键频率</strong>：准确映射，其他频率失真</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="design-steps">
+            <h3>🔧 设计步骤</h3>
+            <ol>
+                <li><strong>频率预畸变</strong>：将数字频率指标转换为模拟频率指标</li>
+                <li><strong>设计模拟原型</strong>：按预畸变后的指标设计Ha(s)</li>
+                <li><strong>应用双线性变换</strong>：将s替换为(2/T)(1-z^{-1})/(1+z^{-1})</li>
+                <li><strong>化简表达式</strong>：得到最终的H(z)</li>
+            </ol>
+        </div>
+        
+        <div class="frequency-mapping">
+            <h3>📊 预畸变公式</h3>
+            <p>设计前需要对关键频率进行预畸变：</p>
+            <div class="formula">
+                Ω_p = (2/T) tan(ω_p T/2)<br>
+                Ω_s = (2/T) tan(ω_s T/2)
+            </div>
+            <p>其中ωp、ωs是数字滤波器的通带、阻带截止频率。</p>
+        </div>
+        
+        <div class="important">
+            <h3>⚠️ 优缺点分析</h3>
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <h4>✅ 优点</h4>
+                    <ul>
+                        <li>无频谱混叠</li>
+                        <li>稳定性保持</li>
+                        <li>适用于所有滤波器类型</li>
+                        <li>设计方法成熟</li>
+                    </ul>
+                </div>
+                <div class="comparison-item">
+                    <h4>❌ 缺点</h4>
+                    <ul>
+                        <li>频率弯曲现象</li>
+                        <li>需要预畸变</li>
+                        <li>时域特性改变</li>
+                        <li>高频段失真较大</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>双线性变换法演示</h3>
+            <canvas id="bilinearDemo" width="800" height="400"></canvas>
+            <div class="controls">
+                <label>模拟滤波器类型：</label>
+                <select id="analogFilterType2">
+                    <option value="butterworth">巴特沃思</option>
+                    <option value="chebyshev">切比雪夫</option>
+                </select>
+                <label>滤波器阶数：</label>
+                <input type="range" id="filterOrder2" min="2" max="6" step="1" value="3">
+                <span id="orderValue2">3</span>
+                <label>采样频率：</label>
+                <input type="range" id="samplingFreq2" min="5" max="20" step="1" value="10">
+                <span id="samplingValue2">10</span> Hz
+                <button onclick="updateBilinear()">更新演示</button>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>频率弯曲效应演示</h3>
+            <canvas id="warpingDemo" width="800" height="300"></canvas>
+            <div class="controls">
+                <label>采样频率fs：</label>
+                <input type="range" id="warpingFs" min="5" max="50" step="5" value="20">
+                <span id="warpingFsValue">20</span> Hz
+                <button onclick="updateWarping()">更新弯曲图</button>
+            </div>
+        </div>
+        
+        <h2>3. 两种方法对比</h2>
+        
+        <div class="knowledge-point">
+            <h3>对比总结</h3>
+            <table>
+                <tr>
+                    <th>特性</th>
+                    <th>冲激响应不变法</th>
+                    <th>双线性变换法</th>
+                </tr>
+                <tr>
+                    <td><strong>s-z映射</strong></td>
+                    <td>z = e^{sT}</td>
+                    <td>s = (2/T)(1-z^{-1})/(1+z^{-1})</td>
+                </tr>
+                <tr>
+                    <td><strong>频率映射</strong></td>
+                    <td>ω = ΩT（存在混叠）</td>
+                    <td>Ω = (2/T)tan(ωT/2)（弯曲）</td>
+                </tr>
+                <tr>
+                    <td><strong>稳定性</strong></td>
+                    <td>保持</td>
+                    <td>保持</td>
+                </tr>
+                <tr>
+                    <td><strong>时域特性</strong></td>
+                    <td>保持脉冲响应形状</td>
+                    <td>改变脉冲响应</td>
+                </tr>
+                <tr>
+                    <td><strong>频域特性</strong></td>
+                    <td>低频好，高频差</td>
+                    <td>需要预畸变补偿</td>
+                </tr>
+                <tr>
+                    <td><strong>适用类型</strong></td>
+                    <td>低通、带通</td>
+                    <td>所有类型</td>
+                </tr>
+                <tr>
+                    <td><strong>设计复杂度</strong></td>
+                    <td>较复杂（部分分式）</td>
+                    <td>较简单（直接替换）</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2>4. 其他类型IIR数字滤波器设计</h2>
+        
+        <div class="knowledge-point">
+            <h3>频率变换在数字域的应用</h3>
+            <p>与模拟滤波器类似，可以通过<strong>数字频率变换</strong>从低通原型设计其他类型的数字滤波器。</p>
+            
+            <h4>数字频率变换公式</h4>
+            
+            <h5>1. 低通到高通变换</h5>
+            <div class="formula">
+                z^{-1} → -z^{-1}
+            </div>
+            
+            <h5>2. 低通到带通变换</h5>
+            <div class="formula">
+                z^{-1} → -[(z^{-1} - α)/(αz^{-1} - 1)]
+            </div>
+            <p>其中 α = cos((ωl + ωh)/2) / cos((ωh - ωl)/2)</p>
+            
+            <h5>3. 低通到带阻变换</h5>
+            <div class="formula">
+                z^{-1} → [(z^{-1} - α)/(αz^{-1} - 1)]
+            </div>
+        </div>
+        
+        <div class="design-steps">
+            <h3>🔧 通用设计流程</h3>
+            <ol>
+                <li><strong>规格化</strong>：将数字滤波器指标转换为规格化低通指标</li>
+                <li><strong>设计低通原型</strong>：用双线性变换法设计数字低通原型</li>
+                <li><strong>频率变换</strong>：应用相应的数字频率变换</li>
+                <li><strong>验证指标</strong>：检查设计结果是否满足要求</li>
+            </ol>
+        </div>
+        
+        <div class="plot-container">
+            <h3>数字频率变换演示</h3>
+            <div class="transformation-demo">
+                <div class="transformation-part">
+                    <canvas id="prototypeFilter" width="250" height="200"></canvas>
+                    <p>低通原型</p>
+                </div>
+                <div class="transformation-part">
+                    <canvas id="transformedFilter" width="250" height="200"></canvas>
+                    <p>变换后滤波器</p>
+                </div>
+            </div>
+            <div class="controls">
+                <label>目标滤波器类型：</label>
+                <select id="targetFilterType">
+                    <option value="highpass">高通滤波器</option>
+                    <option value="bandpass">带通滤波器</option>
+                    <option value="bandstop">带阻滤波器</option>
+                </select>
+                <label>截止频率1：</label>
+                <input type="range" id="cutoff1" min="0.1" max="0.4" step="0.02" value="0.2">
+                <span id="cutoff1Value">0.2</span>π
+                <label>截止频率2：</label>
+                <input type="range" id="cutoff2" min="0.4" max="0.8" step="0.02" value="0.6">
+                <span id="cutoff2Value">0.6</span>π
+                <button onclick="updateDigitalTransform()">应用变换</button>
+            </div>
+        </div>
+        
+        <div class="plot-container">
+            <h3>IIR数字滤波器设计器</h3>
+            <canvas id="iirDesigner" width="800" height="300"></canvas>
+            <div class="controls">
+                <label>设计方法：</label>
+                <select id="designMethod">
+                    <option value="bilinear">双线性变换</option>
+                    <option value="impulse">冲激响应不变</option>
+                </select>
+                <label>滤波器类型：</label>
+                <select id="filterType">
+                    <option value="lowpass">低通</option>
+                    <option value="highpass">高通</option>
+                    <option value="bandpass">带通</option>
+                    <option value="bandstop">带阻</option>
+                </select>
+                <label>原型类型：</label>
+                <select id="prototypeType">
+                    <option value="butterworth">巴特沃思</option>
+                    <option value="chebyshev1">切比雪夫I型</option>
+                </select>
+                <label>阶数：</label>
+                <input type="range" id="designOrder" min="2" max="8" step="1" value="4">
+                <span id="designOrderValue">4</span>
+                <button onclick="designIIRFilter()">设计滤波器</button>
+            </div>
+            <div id="designResult" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+        </div>
+        
+        <h2>练习题目</h2>
+        
+        <div class="exercise">
+            <h4>练习1：冲激响应不变法设计</h4>
+            <p>用冲激响应不变法设计数字低通滤波器，要求：</p>
+            <ul>
+                <li>模拟原型：2阶巴特沃思，截止频率1 rad/s</li>
+                <li>采样频率：fs = 4 Hz</li>
+            </ul>
+            <p>求数字滤波器的传递函数H(z)。</p>
+            <button class="show-answer" onclick="toggleAnswer('answer1')">显示答案</button>
+            <div id="answer1" class="answer">
+                <strong>答案：</strong><br>
+                1. 模拟原型：Ha(s) = 1/(s² + √2s + 1)<br>
+                2. 部分分式分解：Ha(s) = 0.707/(s + 0.707 - j0.707) + 0.707/(s + 0.707 + j0.707)<br>
+                3. T = 1/4 = 0.25s<br>
+                4. 应用变换：H(z) = 0.707/(1 - e^{-0.707T}e^{j0.707T}z^{-1}) + 0.707/(1 - e^{-0.707T}e^{-j0.707T}z^{-1})<br>
+                5. 化简得：H(z) = 0.067(1 + z^{-1})/(1 - 1.143z^{-1} + 0.413z^{-2})
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习2：双线性变换法设计</h4>
+            <p>用双线性变换法设计数字高通滤波器，要求：</p>
+            <ul>
+                <li>通带截止频率：fp = 1.5 kHz</li>
+                <li>阻带截止频率：fs = 1 kHz</li>
+                <li>采样频率：8 kHz</li>
+                <li>用2阶巴特沃思原型</li>
+            </ul>
+            <button class="show-answer" onclick="toggleAnswer('answer2')">显示答案</button>
+            <div id="answer2" class="answer">
+                <strong>答案：</strong><br>
+                1. 数字频率：ωp = 2π×1500/8000 = 1.178 rad, ωs = 2π×1000/8000 = 0.785 rad<br>
+                2. 预畸变：Ωp = (2×8000/2)tan(1.178/2) = 8000×0.647 = 5176 rad/s<br>
+                   Ωs = 8000×tan(0.785/2) = 8000×0.414 = 3312 rad/s<br>
+                3. 设计低通原型，然后变换为高通<br>
+                4. 应用双线性变换得到数字高通滤波器
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习3：频率弯曲分析</h4>
+            <p>在双线性变换中，如果采样频率fs = 10 Hz，分析以下模拟频率对应的数字频率：</p>
+            <ol>
+                <li>Ω = 1 rad/s</li>
+                <li>Ω = 5 rad/s</li>
+                <li>Ω = 10 rad/s</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer3')">显示答案</button>
+            <div id="answer3" class="answer">
+                <strong>答案：</strong><br>
+                T = 1/10 = 0.1s，使用 ω = 2arctan(ΩT/2)：<br>
+                1. ω₁ = 2arctan(1×0.1/2) = 2arctan(0.05) = 0.1 rad<br>
+                2. ω₂ = 2arctan(5×0.1/2) = 2arctan(0.25) = 0.491 rad<br>
+                3. ω₃ = 2arctan(10×0.1/2) = 2arctan(0.5) = 0.927 rad<br>
+                可见高频段弯曲越来越严重
+            </div>
+        </div>
+        
+        <div class="exercise">
+            <h4>练习4：设计方法选择</h4>
+            <p>对于以下应用场景，应该选择哪种设计方法？说明理由。</p>
+            <ol>
+                <li>设计数字高通滤波器，截止频率接近Nyquist频率</li>
+                <li>设计控制系统中的数字滤波器，要求保持时域特性</li>
+                <li>设计音频均衡器中的带通滤波器</li>
+            </ol>
+            <button class="show-answer" onclick="toggleAnswer('answer4')">显示答案</button>
+            <div id="answer4" class="answer">
+                <strong>答案：</strong><br>
+                1. 双线性变换法 - 冲激响应不变法在高频时有混叠问题，不适合高通滤波器<br>
+                2. 冲激响应不变法 - 能保持时域冲激响应特性，适合控制系统应用<br>
+                3. 双线性变换法 - 适合所有滤波器类型，且音频频率相对较低，弯曲影响较小
+            </div>
+        </div>
+        
+        <h2>学习要点总结</h2>
+        
+        <div class="important">
+            <h3>🎯 核心掌握要点</h3>
+            <ol>
+                <li><strong>设计思路</strong>：利用成熟的模拟滤波器设计，通过s-z映射实现</li>
+                <li><strong>冲激响应不变法</strong>：保持时域特性，存在频谱混叠，适合低通滤波器</li>
+                <li><strong>双线性变换法</strong>：无混叠，有频率弯曲，需预畸变，适合所有类型</li>
+                <li><strong>方法选择</strong>：根据应用要求和滤波器类型选择合适方法</li>
+                <li><strong>频率变换</strong>：从低通原型设计其他类型滤波器的统一方法</li>
+                <li><strong>工程权衡</strong>：时域vs频域特性，设计复杂度vs性能的平衡</li>
+            </ol>
+        </div>
+        
+        <div class="bilinear-box">
+            <h3>🔗 实用设计建议</h3>
+            <ul>
+                <li><strong>首选双线性变换</strong>：适用性广，无混叠问题</li>
+                <li><strong>关键频率预畸变</strong>：确保重要频率点准确映射</li>
+                <li><strong>采样频率选择</strong>：至少是最高频率的5-10倍</li>
+                <li><strong>阶数权衡</strong>：在满足指标前提下选择最低阶数</li>
+                <li><strong>数值稳定性</strong>：注意实现时的量化效应</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 更新冲激响应不变法演示
+        function updateImpulseInvariant() {
+            const canvas = document.getElementById('impulseInvariantDemo');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const filterType = document.getElementById('analogFilterType').value;
+            const order = parseInt(document.getElementById('filterOrder1').value);
+            const fs = parseFloat(document.getElementById('samplingFreq').value);
+            
+            document.getElementById('orderValue1').textContent = order;
+            document.getElementById('samplingValue').textContent = fs;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制模拟和数字滤波器对比
+            drawMethodComparison(ctx, width, height, 'impulse', filterType, order, fs);
+        }
+        
+        // 更新双线性变换演示
+        function updateBilinear() {
+            const canvas = document.getElementById('bilinearDemo');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            const filterType = document.getElementById('analogFilterType2').value;
+            const order = parseInt(document.getElementById('filterOrder2').value);
+            const fs = parseFloat(document.getElementById('samplingFreq2').value);
+            
+            document.getElementById('orderValue2').textContent = order;
+            document.getElementById('samplingValue2').textContent = fs;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制模拟和数字滤波器对比
+            drawMethodComparison(ctx, width, height, 'bilinear', filterType, order, fs);
+        }
+        
+        function drawMethodComparison(ctx, width, height, method, filterType, order, fs) {
+            const subHeight = height / 2;
+            
+            // 上半部分：模拟滤波器
+            drawFilterResponse(ctx, 0, 0, width, subHeight, 'analog', filterType, order, fs, '模拟滤波器 Ha(s)');
+            
+            // 下半部分：数字滤波器
+            drawFilterResponse(ctx, 0, subHeight, width, subHeight, method, filterType, order, fs, `数字滤波器 H(z) - ${method === 'impulse' ? '冲激响应不变法' : '双线性变换法'}`);
+        }
+        
+        function drawFilterResponse(ctx, offsetX, offsetY, width, height, type, filterType, order, fs, title) {
+            const centerY = offsetY + height * 0.8;
+            const freqRange = type === 'analog' ? 10 : Math.PI;
+            const scaleX = (width - 60) / freqRange;
+            const scaleY = height * 0.5;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 30, centerY);
+            ctx.lineTo(offsetX + width - 30, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(offsetX + 30, offsetY + 20);
+            ctx.lineTo(offsetX + 30, centerY);
+            ctx.stroke();
+            
+            // 绘制频率响应
+            const color = type === 'analog' ? '#e74c3c' : '#3498db';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i <= 200; i++) {
+                const freq = (i / 200) * freqRange;
+                const x = offsetX + 30 + freq * scaleX;
+                let magnitude;
+                
+                if (type === 'analog') {
+                    // 模拟滤波器响应
+                    magnitude = analogFilterResponse(freq, filterType, order);
+                } else {
+                    // 数字滤波器响应
+                    magnitude = digitalFilterResponse(freq, filterType, order, fs, type);
+                }
+                
+                const y = centerY - magnitude * scaleY;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标题
+            ctx.fillStyle = color;
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, offsetX + width/2, offsetY + 15);
+            
+            // 频率轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            if (type === 'analog') {
+                ctx.fillText('0', offsetX + 30, centerY + 15);
+                ctx.fillText('5', offsetX + 30 + 5 * scaleX, centerY + 15);
+                ctx.fillText('10 rad/s', offsetX + 30 + 10 * scaleX, centerY + 15);
+            } else {
+                ctx.fillText('0', offsetX + 30, centerY + 15);
+                ctx.fillText('π/2', offsetX + 30 + Math.PI/2 * scaleX, centerY + 15);
+                ctx.fillText('π', offsetX + 30 + Math.PI * scaleX, centerY + 15);
+            }
+        }
+        
+        function analogFilterResponse(freq, type, order) {
+            const cutoff = 2; // 归一化截止频率
+            switch (type) {
+                case 'butterworth':
+                    return 1 / Math.sqrt(1 + Math.pow(freq / cutoff, 2 * order));
+                case 'chebyshev':
+                    const epsilon = 0.5;
+                    const x = freq / cutoff;
+                    const Tn = chebyshevPolynomial(order, x);
+                    return 1 / Math.sqrt(1 + epsilon * epsilon * Tn * Tn);
+                default:
+                    return 1;
+            }
+        }
+        
+        function digitalFilterResponse(freq, type, order, fs, method) {
+            // 简化的数字滤波器响应计算
+            let analogFreq;
+            
+            if (method === 'impulse') {
+                // 冲激响应不变法：直接映射，但有混叠
+                analogFreq = freq * fs / (2 * Math.PI);
+                // 添加混叠效应（简化）
+                const aliasing = 0.1 * Math.sin(freq * 3);
+                return analogFilterResponse(analogFreq, type, order) + Math.abs(aliasing);
+            } else {
+                // 双线性变换法：频率弯曲
+                const T = 1 / fs;
+                analogFreq = (2 / T) * Math.tan(freq / 2);
+                return analogFilterResponse(analogFreq, type, order);
+            }
+        }
+        
+        function chebyshevPolynomial(n, x) {
+            if (n === 0) return 1;
+            if (n === 1) return x;
+            
+            let T0 = 1;
+            let T1 = x;
+            let Tn = 0;
+            
+            for (let i = 2; i <= n; i++) {
+                Tn = 2 * x * T1 - T0;
+                T0 = T1;
+                T1 = Tn;
+            }
+            
+            return Tn;
+        }
+        
+        // 更新频率弯曲演示
+        function updateWarping() {
+            const canvas = document.getElementById('warpingDemo');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const fs = parseFloat(document.getElementById('warpingFs').value);
+            
+            document.getElementById('warpingFsValue').textContent = fs;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawWarpingEffect(ctx, width, height, fs);
+        }
+        
+        function drawWarpingEffect(ctx, width, height, fs) {
+            const centerY = height * 0.8;
+            const freqRange = fs / 2; // Nyquist frequency
+            const scaleX = (width - 60) / freqRange;
+            const scaleY = height * 0.5 / Math.PI;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(30, centerY);
+            ctx.lineTo(width - 30, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(30, 30);
+            ctx.lineTo(30, centerY);
+            ctx.stroke();
+            
+            // 理想线性关系
+            ctx.strokeStyle = '#666';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(30, centerY);
+            ctx.lineTo(width - 30, 30);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 实际弯曲关系
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const T = 1 / fs;
+            for (let i = 0; i <= 200; i++) {
+                const analogFreq = (i / 200) * freqRange;
+                const digitalFreq = 2 * Math.atan(analogFreq * T / 2);
+                
+                const x = 30 + analogFreq * scaleX;
+                const y = centerY - digitalFreq * scaleY;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('频率弯曲效应', width / 2, 20);
+            ctx.fillText('模拟频率 Ω (rad/s)', width / 2, height - 5);
+            
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('数字频率 ω (rad)', 0, 0);
+            ctx.restore();
+            
+            // 图例
+            ctx.fillStyle = '#666';
+            ctx.fillRect(width - 200, 50, 20, 2);
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('理想线性关系', width - 175, 55);
+            
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(width - 200, 70, 20, 3);
+            ctx.fillText('双线性变换实际关系', width - 175, 75);
+        }
+        
+        // 更新数字频率变换演示
+        function updateDigitalTransform() {
+            const targetType = document.getElementById('targetFilterType').value;
+            const cutoff1 = parseFloat(document.getElementById('cutoff1').value);
+            const cutoff2 = parseFloat(document.getElementById('cutoff2').value);
+            
+            document.getElementById('cutoff1Value').textContent = cutoff1.toFixed(2);
+            document.getElementById('cutoff2Value').textContent = cutoff2.toFixed(2);
+            
+            // 绘制原型滤波器
+            drawPrototypeFilter();
+            
+            // 绘制变换后滤波器
+            drawTransformedDigitalFilter(targetType, cutoff1, cutoff2);
+        }
+        
+        function drawPrototypeFilter() {
+            const canvas = document.getElementById('prototypeFilter');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawDigitalFilterResponse(ctx, width, height, 'lowpass', 0.3, 0.7, '低通原型', '#3498db');
+        }
+        
+        function drawTransformedDigitalFilter(type, cutoff1, cutoff2) {
+            const canvas = document.getElementById('transformedFilter');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const titles = {
+                'highpass': '高通滤波器',
+                'bandpass': '带通滤波器',
+                'bandstop': '带阻滤波器'
+            };
+            
+            drawDigitalFilterResponse(ctx, width, height, type, cutoff1, cutoff2, titles[type], '#e74c3c');
+        }
+        
+        function drawDigitalFilterResponse(ctx, width, height, type, cutoff1, cutoff2, title, color) {
+            const centerY = height * 0.8;
+            const scaleX = (width - 40) / Math.PI;
+            const scaleY = height * 0.5;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(20, 20);
+            ctx.lineTo(20, centerY);
+            ctx.stroke();
+            
+            // 绘制频率响应
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i <= 100; i++) {
+                const freq = (i / 100) * Math.PI;
+                const x = 20 + freq * scaleX;
+                let magnitude = 0;
+                
+                switch (type) {
+                    case 'lowpass':
+                        magnitude = freq <= cutoff1 * Math.PI ? 1 : 0.01;
+                        break;
+                    case 'highpass':
+                        magnitude = freq >= cutoff1 * Math.PI ? 1 : 0.01;
+                        break;
+                    case 'bandpass':
+                        magnitude = (freq >= cutoff1 * Math.PI && freq <= cutoff2 * Math.PI) ? 1 : 0.01;
+                        break;
+                    case 'bandstop':
+                        magnitude = (freq >= cutoff1 * Math.PI && freq <= cutoff2 * Math.PI) ? 0.01 : 1;
+                        break;
+                }
+                
+                const y = centerY - magnitude * scaleY;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标题
+            ctx.fillStyle = color;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width / 2, 15);
+            
+            // 频率轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '8px Arial';
+            ctx.fillText('0', 20, centerY + 12);
+            ctx.fillText('π/2', 20 + Math.PI/2 * scaleX, centerY + 12);
+            ctx.fillText('π', width - 25, centerY + 12);
+        }
+        
+        // 设计IIR滤波器
+        function designIIRFilter() {
+            const method = document.getElementById('designMethod').value;
+            const filterType = document.getElementById('filterType').value;
+            const prototypeType = document.getElementById('prototypeType').value;
+            const order = parseInt(document.getElementById('designOrder').value);
+            
+            document.getElementById('designOrderValue').textContent = order;
+            
+            // 绘制设计结果
+            const canvas = document.getElementById('iirDesigner');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            drawDesignedFilter(ctx, width, height, method, filterType, prototypeType, order);
+            
+            // 显示设计信息
+            showDesignInfo(method, filterType, prototypeType, order);
+        }
+        
+        function drawDesignedFilter(ctx, width, height, method, filterType, prototypeType, order) {
+            const centerY = height * 0.8;
+            const scaleX = (width - 60) / Math.PI;
+            const scaleY = height * 0.5;
+            
+            // 坐标轴
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(30, centerY);
+            ctx.lineTo(width - 30, centerY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(30, 30);
+            ctx.lineTo(30, centerY);
+            ctx.stroke();
+            
+            // 绘制设计的滤波器响应
+            ctx.strokeStyle = '#2ecc71';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i <= 200; i++) {
+                const freq = (i / 200) * Math.PI;
+                const x = 30 + freq * scaleX;
+                
+                // 简化的滤波器响应计算
+                let magnitude = calculateIIRResponse(freq, filterType, prototypeType, order, method);
+                
+                const y = centerY - magnitude * scaleY;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 标题
+            ctx.fillStyle = '#2ecc71';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${order}阶${prototypeType}${filterType}滤波器 (${method === 'bilinear' ? '双线性变换' : '冲激响应不变'})`, width / 2, 20);
+            
+            // 频率轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            ctx.fillText('0', 30, centerY + 15);
+            ctx.fillText('π/4', 30 + Math.PI/4 * scaleX, centerY + 15);
+            ctx.fillText('π/2', 30 + Math.PI/2 * scaleX, centerY + 15);
+            ctx.fillText('3π/4', 30 + 3*Math.PI/4 * scaleX, centerY + 15);
+            ctx.fillText('π', 30 + Math.PI * scaleX, centerY + 15);
+        }
+        
+        function calculateIIRResponse(freq, filterType, prototypeType, order, method) {
+            // 简化的IIR滤波器响应计算
+            let response = 1;
+            
+            // 基本响应模式
+            switch (filterType) {
+                case 'lowpass':
+                    response = 1 / (1 + Math.pow(freq / (Math.PI * 0.3), 2 * order));
+                    break;
+                case 'highpass':
+                    response = Math.pow(freq / Math.PI, 2 * order) / (1 + Math.pow(freq / (Math.PI * 0.7), 2 * order));
+                    break;
+                case 'bandpass':
+                    const center = Math.PI * 0.5;
+                    const bandwidth = Math.PI * 0.2;
+                    response = 1 / (1 + Math.pow((freq - center) / bandwidth, 2 * order));
+                    break;
+                case 'bandstop':
+                    const center2 = Math.PI * 0.5;
+                    const bandwidth2 = Math.PI * 0.2;
+                    response = Math.pow((freq - center2) / bandwidth2, 2 * order) / (1 + Math.pow((freq - center2) / bandwidth2, 2 * order));
+                    break;
+            }
+            
+            // 添加原型类型的影响
+            if (prototypeType === 'chebyshev1') {
+                response *= (1 + 0.1 * Math.sin(order * freq)); // 简化的纹波效应
+            }
+            
+            // 添加设计方法的影响
+            if (method === 'impulse' && freq > Math.PI * 0.7) {
+                response += 0.05 * Math.sin(freq * 3); // 简化的混叠效应
+            }
+            
+            return Math.max(0.001, Math.min(1, response));
+        }
+        
+        function showDesignInfo(method, filterType, prototypeType, order) {
+            const resultDiv = document.getElementById('designResult');
+            
+            const typeNames = {
+                'lowpass': '低通',
+                'highpass': '高通', 
+                'bandpass': '带通',
+                'bandstop': '带阻'
+            };
+            
+            const prototypeNames = {
+                'butterworth': '巴特沃思',
+                'chebyshev1': '切比雪夫I型'
+            };
+            
+            const methodNames = {
+                'bilinear': '双线性变换法',
+                'impulse': '冲激响应不变法'
+            };
+            
+            let assessment = '';
+            if (method === 'impulse' && (filterType === 'highpass' || filterType === 'bandstop')) {
+                assessment = '⚠️ 注意：冲激响应不变法不适合高通和带阻滤波器设计';
+            } else if (method === 'bilinear') {
+                assessment = '✅ 推荐选择：双线性变换法适用于所有滤波器类型';
+            } else {
+                assessment = '✅ 合适选择：适合当前滤波器类型';
+            }
+            
+            resultDiv.innerHTML = `
+                <h4>设计结果</h4>
+                <p><strong>滤波器类型：</strong>${order}阶${prototypeNames[prototypeType]}${typeNames[filterType]}滤波器</p>
+                <p><strong>设计方法：</strong>${methodNames[method]}</p>
+                <p><strong>设计评估：</strong>${assessment}</p>
+                <p><strong>特性说明：</strong></p>
+                <ul>
+                    <li>${prototypeNames[prototypeType]}原型具有${prototypeType === 'butterworth' ? '最大平坦特性' : '等纹波特性'}</li>
+                    <li>${methodNames[method]}${method === 'bilinear' ? '无频谱混叠但有频率弯曲' : '保持时域特性但可能有混叠'}</li>
+                    <li>建议在实际应用前进行仿真验证</li>
+                </ul>
+            `;
+        }
+        
+        // 切换答案显示
+        function toggleAnswer(answerId) {
+            const answer = document.getElementById(answerId);
+            answer.style.display = answer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 页面加载后初始化
+        window.onload = function() {
+            updateImpulseInvariant();
+            updateBilinear();
+            updateWarping();
+            updateDigitalTransform();
+            designIIRFilter();
+        };
+    </script>
+</body>
+</html>

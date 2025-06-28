@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连续时间信号的时域分析</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #3498db, #8e44ad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .formula {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1em;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+            text-align: center;
+        }
+        
+        .signal-canvas {
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .controls {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .controls label {
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 5px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .exercise {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .exercise h4 {
+            color: #d68910;
+            margin-top: 0;
+        }
+        
+        .answer-input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 10px;
+            width: 200px;
+        }
+        
+        .feedback {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .key-points {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .key-points h4 {
+            color: #0c5460;
+            margin-top: 0;
+        }
+        
+        ul li {
+            margin: 8px 0;
+        }
+        
+        .convolution-demo {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4169e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 连续时间信号的时域分析</h1>
+        
+        <div class="section">
+            <h2>1. 基本的连续时间信号</h2>
+            
+            <h3>1.1 单位阶跃信号 u(t)</h3>
+            <div class="formula">
+                u(t) = {1, t ≥ 0; 0, t < 0}
+            </div>
+            <canvas id="stepCanvas" class="signal-canvas" width="600" height="300"></canvas>
+            
+            <h3>1.2 单位冲激信号 δ(t)</h3>
+            <div class="formula">
+                δ(t) = {∞, t = 0; 0, t ≠ 0}<br>
+                ∫_{-∞}^{∞} δ(t)dt = 1
+            </div>
+            <canvas id="impulseCanvas" class="signal-canvas" width="600" height="300"></canvas>
+            
+            <h3>1.3 指数信号</h3>
+            <div class="formula">
+                x(t) = Ae^{at}, 其中A为幅度，a为指数参数
+            </div>
+            <div class="controls">
+                <label>A:</label>
+                <input type="range" id="expA" min="0.1" max="3" step="0.1" value="1">
+                <span id="expAValue">1</span>
+                <label>a:</label>
+                <input type="range" id="expParam" min="-2" max="2" step="0.1" value="0.5">
+                <span id="expParamValue">0.5</span>
+                <button onclick="updateExpSignal()">更新图像</button>
+            </div>
+            <canvas id="expCanvas" class="signal-canvas" width="600" height="300"></canvas>
+            
+            <h3>1.4 正弦信号</h3>
+            <div class="formula">
+                x(t) = A sin(ωt + φ), 其中A为幅度，ω为角频率，φ为初相位
+            </div>
+            <div class="controls">
+                <label>幅度A:</label>
+                <input type="range" id="sinA" min="0.1" max="3" step="0.1" value="1">
+                <span id="sinAValue">1</span>
+                <label>频率ω:</label>
+                <input type="range" id="sinOmega" min="0.5" max="5" step="0.1" value="2">
+                <span id="sinOmegaValue">2</span>
+                <label>相位φ:</label>
+                <input type="range" id="sinPhi" min="0" max="6.28" step="0.1" value="0">
+                <span id="sinPhiValue">0</span>
+                <button onclick="updateSinSignal()">更新图像</button>
+            </div>
+            <canvas id="sinCanvas" class="signal-canvas" width="600" height="300"></canvas>
+            
+            <div class="key-points">
+                <h4>重点记忆：</h4>
+                <ul>
+                    <li>单位阶跃信号是最基本的信号，用于描述开关特性</li>
+                    <li>单位冲激信号具有筛选特性：∫f(t)δ(t-t₀)dt = f(t₀)</li>
+                    <li>指数信号：a>0时递增，a<0时递减，a=0时为常数</li>
+                    <li>正弦信号的三要素：幅度、频率、相位</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题1：</h4>
+                <p>若信号x(t) = 2e^(-0.5t)u(t)，求t=2时的信号值（保留两位小数）：</p>
+                <input type="number" id="answer1" class="answer-input" placeholder="输入答案" step="0.01">
+                <button onclick="checkAnswer1()">提交答案</button>
+                <div id="feedback1" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>2. 连续时间信号的运算</h2>
+            
+            <h3>2.1 时移运算</h3>
+            <div class="formula">
+                x(t-t₀): 信号向右时移t₀<br>
+                x(t+t₀): 信号向左时移t₀
+            </div>
+            
+            <h3>2.2 时间尺度变换</h3>
+            <div class="formula">
+                x(at): a>1时压缩，0<a<1时扩展，a<0时翻转+尺度变换
+            </div>
+            
+            <h3>2.3 翻转运算</h3>
+            <div class="formula">
+                x(-t): 信号关于t=0轴翻转
+            </div>
+            
+            <div class="controls">
+                <label>选择基础信号:</label>
+                <select id="baseSignal">
+                    <option value="step">阶跃信号</option>
+                    <option value="exp">指数信号</option>
+                    <option value="sin">正弦信号</option>
+                </select>
+                <label>时移t₀:</label>
+                <input type="range" id="timeShift" min="-3" max="3" step="0.1" value="0">
+                <span id="timeShiftValue">0</span>
+                <label>尺度a:</label>
+                <input type="range" id="timeScale" min="-2" max="2" step="0.1" value="1">
+                <span id="timeScaleValue">1</span>
+                <button onclick="updateTransformedSignal()">更新变换</button>
+            </div>
+            <canvas id="transformCanvas" class="signal-canvas" width="600" height="400"></canvas>
+            
+            <div class="exercise">
+                <h4>🔧 练习题2：</h4>
+                <p>若x(t) = u(t+2) - u(t-2)，这是一个宽度为多少的矩形脉冲？</p>
+                <input type="number" id="answer2" class="answer-input" placeholder="输入答案">
+                <button onclick="checkAnswer2()">提交答案</button>
+                <div id="feedback2" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>3. 连续时间信号的分解</h2>
+            
+            <h3>3.1 奇偶分解</h3>
+            <div class="formula">
+                x(t) = x_e(t) + x_o(t)<br>
+                偶分量：x_e(t) = [x(t) + x(-t)]/2<br>
+                奇分量：x_o(t) = [x(t) - x(-t)]/2
+            </div>
+            
+            <div class="controls">
+                <label>输入信号:</label>
+                <select id="decomposeSignal" onchange="updateDecomposition()">
+                    <option value="exp">指数信号 e^t</option>
+                    <option value="custom">自定义信号 t²</option>
+                </select>
+            </div>
+            <canvas id="decomposeCanvas" class="signal-canvas" width="600" height="500"></canvas>
+            
+            <div class="key-points">
+                <h4>奇偶分解性质：</h4>
+                <ul>
+                    <li>偶函数：f(-t) = f(t)，关于y轴对称</li>
+                    <li>奇函数：f(-t) = -f(t)，关于原点对称</li>
+                    <li>任何信号都可以唯一分解为奇分量和偶分量之和</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题3：</h4>
+                <p>信号x(t) = t³的奇分量是什么？</p>
+                <select id="answer3" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="t3">t³</option>
+                    <option value="0">0</option>
+                    <option value="t3/2">t³/2</option>
+                </select>
+                <button onclick="checkAnswer3()">提交答案</button>
+                <div id="feedback3" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>4. 时域分析法——卷积</h2>
+            
+            <h3>4.1 卷积定义</h3>
+            <div class="formula">
+                y(t) = x(t) * h(t) = ∫_{-∞}^{∞} x(τ)h(t-τ)dτ
+            </div>
+            
+            <h3>4.2 卷积的图解法步骤</h3>
+            <div class="key-points">
+                <h4>卷积图解法：</h4>
+                <ul>
+                    <li>1. 将h(τ)翻转得到h(-τ)</li>
+                    <li>2. 将h(-τ)时移t得到h(t-τ)</li>
+                    <li>3. 计算x(τ)与h(t-τ)的乘积</li>
+                    <li>4. 对乘积在整个τ轴上积分</li>
+                </ul>
+            </div>
+            
+            <div class="convolution-demo">
+                <h4>卷积可视化演示</h4>
+                <div class="controls">
+                    <label>时间t:</label>
+                    <input type="range" id="convTime" min="-5" max="5" step="0.1" value="0">
+                    <span id="convTimeValue">0</span>
+                    <button onclick="updateConvolution()">更新卷积</button>
+                    <button onclick="animateConvolution()">动画演示</button>
+                </div>
+                <canvas id="convolutionCanvas" class="signal-canvas" width="600" height="600"></canvas>
+            </div>
+            
+            <h3>4.3 卷积性质</h3>
+            <div class="key-points">
+                <h4>重要性质：</h4>
+                <ul>
+                    <li>交换律：x(t) * h(t) = h(t) * x(t)</li>
+                    <li>结合律：[x(t) * h₁(t)] * h₂(t) = x(t) * [h₁(t) * h₂(t)]</li>
+                    <li>分配律：x(t) * [h₁(t) + h₂(t)] = x(t) * h₁(t) + x(t) * h₂(t)</li>
+                    <li>冲激函数性质：x(t) * δ(t) = x(t)</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>🔧 练习题4：</h4>
+                <p>计算u(t) * u(t)的结果是：</p>
+                <select id="answer4" class="answer-input">
+                    <option value="">选择答案</option>
+                    <option value="tu(t)">tu(t)</option>
+                    <option value="u(t)">u(t)</option>
+                    <option value="t²u(t)">t²u(t)</option>
+                </select>
+                <button onclick="checkAnswer4()">提交答案</button>
+                <div id="feedback4" class="feedback" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 本章小结</h2>
+            <div class="key-points">
+                <h4>核心要点：</h4>
+                <ul>
+                    <li><strong>基本信号：</strong>掌握阶跃、冲激、指数、正弦信号的定义和性质</li>
+                    <li><strong>信号运算：</strong>理解时移、尺度变换、翻转的几何意义</li>
+                    <li><strong>信号分解：</strong>任何信号都可分解为奇偶分量</li>
+                    <li><strong>卷积运算：</strong>是LTI系统分析的核心工具，掌握图解法和性质</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 绘图工具函数
+        function drawAxis(ctx, width, height, xMin, xMax, yMin, yMax) {
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            // 坐标轴
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(20, centerY);
+            ctx.lineTo(width - 20, centerY);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(centerX, 20);
+            ctx.lineTo(centerX, height - 20);
+            ctx.stroke();
+            
+            // 箭头
+            ctx.beginPath();
+            ctx.moveTo(width - 25, centerY - 5);
+            ctx.lineTo(width - 20, centerY);
+            ctx.lineTo(width - 25, centerY + 5);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX - 5, 25);
+            ctx.lineTo(centerX, 20);
+            ctx.lineTo(centerX + 5, 25);
+            ctx.stroke();
+            
+            // 标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('t', width - 15, centerY + 15);
+            ctx.fillText('x(t)', centerX + 10, 35);
+            ctx.fillText('0', centerX + 5, centerY + 15);
+        }
+        
+        function drawStepFunction() {
+            const canvas = document.getElementById('stepCanvas');
+            const ctx = canvas.getContext('2d');
+            drawAxis(ctx, 600, 300, -5, 5, -0.5, 1.5);
+            
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            
+            const centerX = 300;
+            const centerY = 150;
+            
+            // t < 0部分
+            ctx.beginPath();
+            ctx.moveTo(50, centerY);
+            ctx.lineTo(centerX, centerY);
+            ctx.stroke();
+            
+            // t ≥ 0部分
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - 60);
+            ctx.lineTo(550, centerY - 60);
+            ctx.stroke();
+            
+            // 垂直线表示跳跃
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX, centerY - 60);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 标记点
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - 60, 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('1', centerX + 10, centerY - 55);
+        }
+        
+        function drawImpulseFunction() {
+            const canvas = document.getElementById('impulseCanvas');
+            const ctx = canvas.getContext('2d');
+            drawAxis(ctx, 600, 300, -5, 5, -0.5, 1.5);
+            
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 3;
+            
+            const centerX = 300;
+            const centerY = 150;
+            
+            // 冲激信号（用箭头表示）
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(centerX, centerY - 80);
+            ctx.stroke();
+            
+            // 箭头头部
+            ctx.beginPath();
+            ctx.moveTo(centerX - 5, centerY - 75);
+            ctx.lineTo(centerX, centerY - 80);
+            ctx.lineTo(centerX + 5, centerY - 75);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText('δ(t)', centerX + 10, centerY - 70);
+        }
+        
+        function updateExpSignal() {
+            const A = parseFloat(document.getElementById('expA').value);
+            const a = parseFloat(document.getElementById('expParam').value);
+            document.getElementById('expAValue').textContent = A;
+            document.getElementById('expParamValue').textContent = a;
+            
+            const canvas = document.getElementById('expCanvas');
+            const ctx = canvas.getContext('2d');
+            drawAxis(ctx, 600, 300, -5, 5, -3, 3);
+            
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 3;
+            
+            const centerX = 300;
+            const centerY = 150;
+            const scaleX = 50;
+            const scaleY = 40;
+            
+            ctx.beginPath();
+            for (let t = -5; t <= 5; t += 0.1) {
+                const x = centerX + t * scaleX;
+                const y = centerY - A * Math.exp(a * t) * scaleY;
+                if (t === -5) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 添加公式标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText(`x(t) = ${A}e^(${a}t)`, 50, 50);
+        }
+        
+        function updateSinSignal() {
+            const A = parseFloat(document.getElementById('sinA').value);
+            const omega = parseFloat(document.getElementById('sinOmega').value);
+            const phi = parseFloat(document.getElementById('sinPhi').value);
+            document.getElementById('sinAValue').textContent = A;
+            document.getElementById('sinOmegaValue').textContent = omega;
+            document.getElementById('sinPhiValue').textContent = phi.toFixed(2);
+            
+            const canvas = document.getElementById('sinCanvas');
+            const ctx = canvas.getContext('2d');
+            drawAxis(ctx, 600, 300, -5, 5, -3, 3);
+            
+            ctx.strokeStyle = '#8e44ad';
+            ctx.lineWidth = 3;
+            
+            const centerX = 300;
+            const centerY = 150;
+            const scaleX = 50;
+            const scaleY = 60;
+            
+            ctx.beginPath();
+            for (let t = -5; t <= 5; t += 0.02) {
+                const x = centerX + t * scaleX;
+                const y = centerY - A * Math.sin(omega * t + phi) * scaleY;
+                if (t === -5) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 添加公式标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText(`x(t) = ${A}sin(${omega}t + ${phi.toFixed(2)})`, 50, 50);
+        }
+        
+        function updateTransformedSignal() {
+            const baseSignal = document.getElementById('baseSignal').value;
+            const t0 = parseFloat(document.getElementById('timeShift').value);
+            const a = parseFloat(document.getElementById('timeScale').value);
+            document.getElementById('timeShiftValue').textContent = t0;
+            document.getElementById('timeScaleValue').textContent = a;
+            
+            const canvas = document.getElementById('transformCanvas');
+            const ctx = canvas.getContext('2d');
+            drawAxis(ctx, 600, 400, -5, 5, -2, 2);
+            
+            const centerX = 300;
+            const centerY = 200;
+            const scaleX = 50;
+            const scaleY = 80;
+            
+            // 原信号
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            drawBaseSignal(ctx, baseSignal, centerX, centerY, scaleX, scaleY, 0, 1);
+            ctx.setLineDash([]);
+            
+            // 变换后信号
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            drawBaseSignal(ctx, baseSignal, centerX, centerY, scaleX, scaleY, t0, a);
+            
+            // 添加标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('原信号 (虚线)', 50, 50);
+            ctx.fillText(`变换后: x(${a}t${t0 >= 0 ? '-' : '+'}${Math.abs(t0)})`, 50, 70);
+        }
+        
+        function drawBaseSignal(ctx, type, centerX, centerY, scaleX, scaleY, t0, a) {
+            ctx.beginPath();
+            for (let t = -5; t <= 5; t += 0.05) {
+                const transformedT = a * t - t0;
+                let y;
+                
+                switch(type) {
+                    case 'step':
+                        y = transformedT >= 0 ? 1 : 0;
+                        break;
+                    case 'exp':
+                        y = Math.exp(-Math.abs(transformedT));
+                        break;
+                    case 'sin':
+                        y = Math.sin(2 * transformedT);
+                        break;
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -5) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function updateDecomposition() {
+            const signal = document.getElementById('decomposeSignal').value;
+            const canvas = document.getElementById('decomposeCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清空画布并设置三个子图
+            ctx.clearRect(0, 0, 600, 500);
+            
+            // 绘制三个子图的坐标轴
+            for (let i = 0; i < 3; i++) {
+                const offsetY = i * 160 + 20;
+                drawSubAxis(ctx, 600, 150, offsetY, -3, 3, -2, 2);
+            }
+            
+            const centerX = 300;
+            const scaleX = 80;
+            const scaleY = 40;
+            
+            // 原信号
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 3;
+            drawDecomposeSignal(ctx, signal, 'original', centerX, 95, scaleX, scaleY);
+            
+            // 偶分量
+            ctx.strokeStyle = '#e74c3c';
+            drawDecomposeSignal(ctx, signal, 'even', centerX, 255, scaleX, scaleY);
+            
+            // 奇分量
+            ctx.strokeStyle = '#3498db';
+            drawDecomposeSignal(ctx, signal, 'odd', centerX, 415, scaleX, scaleY);
+            
+            // 添加标签
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('原信号 x(t)', 50, 40);
+            ctx.fillText('偶分量 xe(t)', 50, 200);
+            ctx.fillText('奇分量 xo(t)', 50, 360);
+        }
+        
+        function drawSubAxis(ctx, width, height, offsetY, xMin, xMax, yMin, yMax) {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            const centerX = width / 2;
+            const centerY = height / 2 + offsetY;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(50, centerY);
+            ctx.lineTo(width - 50, centerY);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(centerX, offsetY + 20);
+            ctx.lineTo(centerX, offsetY + height - 20);
+            ctx.stroke();
+        }
+        
+        function drawDecomposeSignal(ctx, type, component, centerX, centerY, scaleX, scaleY) {
+            ctx.beginPath();
+            for (let t = -3; t <= 3; t += 0.05) {
+                let y;
+                
+                if (type === 'exp') {
+                    const original = Math.exp(t);
+                    const flipped = Math.exp(-t);
+                    
+                    switch(component) {
+                        case 'original':
+                            y = original / 10; // 缩放以适应图表
+                            break;
+                        case 'even':
+                            y = (original + flipped) / 20;
+                            break;
+                        case 'odd':
+                            y = (original - flipped) / 20;
+                            break;
+                    }
+                } else if (type === 'custom') {
+                    const original = t * t;
+                    const flipped = t * t; // t²是偶函数
+                    
+                    switch(component) {
+                        case 'original':
+                            y = original / 5;
+                            break;
+                        case 'even':
+                            y = (original + flipped) / 10;
+                            break;
+                        case 'odd':
+                            y = (original - flipped) / 10;
+                            break;
+                    }
+                }
+                
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (t === -3) {
+                    ctx.moveTo(x, plotY);
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        let animationId;
+        
+        function updateConvolution() {
+            const t = parseFloat(document.getElementById('convTime').value);
+            document.getElementById('convTimeValue').textContent = t;
+            
+            const canvas = document.getElementById('convolutionCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清空画布
+            ctx.clearRect(0, 0, 600, 600);
+            
+            // 绘制四个子图
+            drawConvolutionSubplots(ctx, t);
+        }
+        
+        function drawConvolutionSubplots(ctx, t) {
+            const subplotHeight = 140;
+            const centerX = 300;
+            const scaleX = 40;
+            const scaleY = 60;
+            
+            // 子图1: x(τ)
+            drawSubAxis(ctx, 600, subplotHeight, 10, -5, 5, -1.5, 1.5);
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 3;
+            drawRectPulse(ctx, centerX, 80, scaleX, scaleY, 0, 2); // x(τ) = u(τ) - u(τ-2)
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.fillText('x(τ)', 50, 30);
+            
+            // 子图2: h(t-τ)
+            drawSubAxis(ctx, 600, subplotHeight, 160, -5, 5, -1.5, 1.5);
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 3;
+            drawRectPulse(ctx, centerX, 230, scaleX, scaleY, t-1, 1); // h(t-τ) 
+            ctx.fillStyle = '#333';
+            ctx.fillText(`h(${t.toFixed(1)}-τ)`, 50, 180);
+            
+            // 子图3: x(τ)h(t-τ)
+            drawSubAxis(ctx, 600, subplotHeight, 310, -5, 5, -1.5, 1.5);
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 3;
+            drawConvolutionProduct(ctx, centerX, 380, scaleX, scaleY, t);
+            ctx.fillStyle = '#333';
+            ctx.fillText('x(τ)h(t-τ)', 50, 330);
+            
+            // 子图4: 卷积结果
+            drawSubAxis(ctx, 600, subplotHeight, 460, -5, 5, -1.5, 2);
+            ctx.strokeStyle = '#8e44ad';
+            ctx.lineWidth = 3;
+            drawConvolutionResult(ctx, centerX, 530, scaleX, scaleY);
+            ctx.fillStyle = '#333';
+            ctx.fillText('y(t) = x(t)*h(t)', 50, 480);
+            
+            // 在卷积结果图上标记当前时间点
+            const convValue = calculateConvolutionValue(t);
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(centerX + t * scaleX, 530 - convValue * scaleY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        function drawRectPulse(ctx, centerX, centerY, scaleX, scaleY, start, width) {
+            ctx.beginPath();
+            // 画矩形脉冲
+            ctx.moveTo(centerX + (start - 3) * scaleX, centerY);
+            ctx.lineTo(centerX + start * scaleX, centerY);
+            ctx.lineTo(centerX + start * scaleX, centerY - scaleY);
+            ctx.lineTo(centerX + (start + width) * scaleX, centerY - scaleY);
+            ctx.lineTo(centerX + (start + width) * scaleX, centerY);
+            ctx.lineTo(centerX + 5 * scaleX, centerY);
+            ctx.stroke();
+        }
+        
+        function drawConvolutionProduct(ctx, centerX, centerY, scaleX, scaleY, t) {
+            // 计算x(τ)和h(t-τ)的乘积
+            const x_start = 0, x_end = 2;  // x(τ)的范围
+            const h_start = t - 1, h_end = t;  // h(t-τ)的范围
+            
+            const overlap_start = Math.max(x_start, h_start);
+            const overlap_end = Math.min(x_end, h_end);
+            
+            if (overlap_start < overlap_end) {
+                ctx.beginPath();
+                ctx.moveTo(centerX + (overlap_start - 3) * scaleX, centerY);
+                ctx.lineTo(centerX + overlap_start * scaleX, centerY);
+                ctx.lineTo(centerX + overlap_start * scaleX, centerY - scaleY);
+                ctx.lineTo(centerX + overlap_end * scaleX, centerY - scaleY);
+                ctx.lineTo(centerX + overlap_end * scaleX, centerY);
+                ctx.lineTo(centerX + 5 * scaleX, centerY);
+                ctx.stroke();
+            } else {
+                // 无重叠，画零线
+                ctx.beginPath();
+                ctx.moveTo(centerX - 3 * scaleX, centerY);
+                ctx.lineTo(centerX + 5 * scaleX, centerY);
+                ctx.stroke();
+            }
+        }
+        
+        function drawConvolutionResult(ctx, centerX, centerY, scaleX, scaleY) {
+            ctx.beginPath();
+            let first = true;
+            for (let t = -2; t <= 5; t += 0.1) {
+                const y = calculateConvolutionValue(t);
+                const x = centerX + t * scaleX;
+                const plotY = centerY - y * scaleY;
+                
+                if (first) {
+                    ctx.moveTo(x, plotY);
+                    first = false;
+                } else {
+                    ctx.lineTo(x, plotY);
+                }
+            }
+            ctx.stroke();
+        }
+        
+        function calculateConvolutionValue(t) {
+            // 计算两个矩形脉冲的卷积
+            // x(t) = u(t) - u(t-2), h(t) = u(t) - u(t-1)
+            if (t < 0) return 0;
+            else if (t < 1) return t;
+            else if (t < 2) return 1;
+            else if (t < 3) return 3 - t;
+            else return 0;
+        }
+        
+        function animateConvolution() {
+            let t = -2;
+            const animate = () => {
+                document.getElementById('convTime').value = t;
+                updateConvolution();
+                t += 0.2;
+                if (t <= 5) {
+                    animationId = setTimeout(animate, 200);
+                }
+            };
+            animate();
+        }
+        
+        // 练习题答案检查
+        function checkAnswer1() {
+            const answer = parseFloat(document.getElementById('answer1').value);
+            const correct = 2 * Math.exp(-0.5 * 2);
+            const feedback = document.getElementById('feedback1');
+            
+            if (Math.abs(answer - correct) < 0.01) {
+                feedback.textContent = '正确！x(2) = 2e^(-0.5×2) = 2e^(-1) ≈ 0.74';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = `错误。正确答案是 ${correct.toFixed(2)}。计算过程：x(2) = 2e^(-0.5×2) = 2e^(-1)`;
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer2() {
+            const answer = parseFloat(document.getElementById('answer2').value);
+            const feedback = document.getElementById('feedback2');
+            
+            if (answer === 4) {
+                feedback.textContent = '正确！u(t+2) - u(t-2)表示从t=-2到t=2的矩形脉冲，宽度为4。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。u(t+2)在t=-2处跳跃为1，u(t-2)在t=2处跳跃为1，所以矩形脉冲宽度为2-(-2)=4。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer3() {
+            const answer = document.getElementById('answer3').value;
+            const feedback = document.getElementById('feedback3');
+            
+            if (answer === 't3') {
+                feedback.textContent = '正确！因为t³是奇函数，所以它的奇分量就是它本身t³。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。t³是奇函数，因为(-t)³ = -t³，所以奇分量 = [t³ - (-t³)]/2 = t³。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        function checkAnswer4() {
+            const answer = document.getElementById('answer4').value;
+            const feedback = document.getElementById('feedback4');
+            
+            if (answer === 'tu(t)') {
+                feedback.textContent = '正确！u(t) * u(t) = tu(t)，这是经典的卷积结果。';
+                feedback.className = 'feedback correct';
+            } else {
+                feedback.textContent = '错误。u(t) * u(t) = ∫u(τ)u(t-τ)dτ，积分区间为[0,t]（当t>0时），结果为tu(t)。';
+                feedback.className = 'feedback incorrect';
+            }
+            feedback.style.display = 'block';
+        }
+        
+        // 初始化图像
+        window.onload = function() {
+            drawStepFunction();
+            drawImpulseFunction();
+            updateExpSignal();
+            updateSinSignal();
+            updateTransformedSignal();
+            updateDecomposition();
+            updateConvolution();
+        };
+        
+        // 事件监听器
+        document.getElementById('expA').addEventListener('input', updateExpSignal);
+        document.getElementById('expParam').addEventListener('input', updateExpSignal);
+        document.getElementById('sinA').addEventListener('input', updateSinSignal);
+        document.getElementById('sinOmega').addEventListener('input', updateSinSignal);
+        document.getElementById('sinPhi').addEventListener('input', updateSinSignal);
+        document.getElementById('timeShift').addEventListener('input', updateTransformedSignal);
+        document.getElementById('timeScale').addEventListener('input', updateTransformedSignal);
+        document.getElementById('baseSignal').addEventListener('change', updateTransformedSignal);
+        document.getElementById('convTime').addEventListener('input', updateConvolution);
+    </script>
+</body>
+</html>
